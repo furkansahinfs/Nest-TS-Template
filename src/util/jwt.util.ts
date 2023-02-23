@@ -41,19 +41,23 @@ export function generateToken(
   });
 }
 
-export function getJWTUsername(token: string) {
-  const signingKey = Buffer.from(
-    process.env["REFRESH_TOKEN_PUBLIC_KEY"],
-    "base64",
-  ).toString("ascii");
+export function getJWTUsername(
+  token: string,
+  keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
+) {
+  const signingKey = Buffer.from(process.env[keyName], "base64").toString(
+    "ascii",
+  );
   const user = verify(token, signingKey);
   return user?.["username"];
 }
 
-export function getJWTUserId(token: string) {
-  const signingKey = Buffer.from(
-    process.env["REFRESH_TOKEN_PUBLIC_KEY"],
-    "base64",
-  ).toString("ascii");
+export function getJWTUserId(
+  token: string,
+  keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
+) {
+  const signingKey = Buffer.from(process.env[keyName], "base64").toString(
+    "ascii",
+  );
   return verify(token, signingKey)["userId"];
 }
