@@ -2,7 +2,7 @@ import { sign, SignOptions, verify } from "jsonwebtoken";
 
 export const verifyToken = (
   token: string,
-  keyName: "ACCESS_TOKEN_PRIVATE_KEY" | "REFRESH_TOKEN_PRIVATE_KEY",
+  keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
 ) => {
   const publicKey = Buffer.from(process.env[keyName], "base64").toString(
     "ascii",
@@ -10,6 +10,7 @@ export const verifyToken = (
 
   try {
     const decoded = verify(token, publicKey);
+    console.log(decoded);
     return {
       valid: true,
       expired: false,
@@ -25,7 +26,7 @@ export const verifyToken = (
   }
 };
 
-export function generateAccessToken(
+export function generateToken(
   user: { email: string; userId: string },
   keyName: "ACCESS_TOKEN_PRIVATE_KEY" | "REFRESH_TOKEN_PRIVATE_KEY",
   options?: SignOptions | undefined,
@@ -41,16 +42,10 @@ export function generateAccessToken(
   });
 }
 
-export function getUserName(req) {
-  return verify(
-    req.headers["authorization"].split(" ")[1],
-    process.env.JWT_SECRET,
-  )["username"];
+export function getJWTUsername(token: string) {
+  return verify(token, process.env.JWT_SECRET)["username"];
 }
 
-export function getUserId(req) {
-  return verify(
-    req.headers["authorization"].split(" ")[1],
-    process.env.JWT_SECRET,
-  )["userId"];
+export function getJWTUserId(token: string) {
+  return verify(token, process.env.JWT_SECRET)["userId"];
 }

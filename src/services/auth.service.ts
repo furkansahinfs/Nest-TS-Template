@@ -1,11 +1,19 @@
-import { generateAccessToken } from "../util/jwt.util";
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "./prisma.service";
 import { RegisterDTO, TokenDTO } from "src/dto";
 import { Response } from "express";
 import { I18nService } from "nestjs-i18n";
 import { HttpStatus } from "src/enums";
-import { comparePassword, encryptPassword, ResponseBody } from "src/util";
+import { get } from "lodash";
+import {
+  comparePassword,
+  encryptPassword,
+  generateToken,
+  verifyToken,
+  ResponseBody,
+  getJWTUsername,
+  getJWTUserId,
+} from "src/util";
 
 @Injectable()
 export class AuthService {
@@ -50,7 +58,7 @@ export class AuthService {
       return response.status(HttpStatus.OK).send(
         ResponseBody()
           .data({
-            access_token: generateAccessToken(
+            access_token: generateToken(
               { email, userId: maybeUser.id },
               "ACCESS_TOKEN_PRIVATE_KEY",
             ),
@@ -99,6 +107,28 @@ export class AuthService {
         .send(ResponseBody().data(user).build());
     } catch (e) {
       return response;
+    }
+  }
+
+  static async refreshAccessToken({ refreshToken }: { refreshToken: string }) {
+    try {
+      const { decoded } = verifyToken(refreshToken, "REFRESH_TOKEN_PUBLIC_KEY");
+      if (!decoded || !get(decoded, "session")) {
+        return false;
+      }
+      const username = await getJWTUsername(refreshToken);
+      const userId = await getJWTUserId(refreshToken);
+      if (!username || !userId) {
+        return false;
+      }
+      const accessToken = generateToken(
+        { email: username, userId: userId },
+        "ACCESS_TOKEN_PRIVATE_KEY",
+        { expiresIn: process.env.ACCESS_TOKEN_TIME }, // 15 minutes
+      );
+      return accessToken;
+    } catch (error) {
+      console.error(error);
     }
   }
 

@@ -1,9 +1,10 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { AppController, AuthController } from "src/controller";
-import { AppService, AuthService } from "src/services";
+import { AppService, AuthService, UserService } from "src/services";
 import { PrismaService } from "src/services/prisma.service";
 import * as path from "path";
 import { I18nModule } from "nestjs-i18n";
+import { JWTMiddleware } from "src/middleware";
 
 @Module({
   imports: [
@@ -16,6 +17,10 @@ import { I18nModule } from "nestjs-i18n";
     }),
   ],
   controllers: [AppController, AuthController],
-  providers: [PrismaService, AppService, AuthService],
+  providers: [PrismaService, AppService, AuthService, UserService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(JWTMiddleware).exclude("/ogin").forRoutes("/");
+  }
+}

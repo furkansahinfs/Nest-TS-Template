@@ -7,4 +7,5 @@ export type TokenDTO = {
   email: string;
   password: string;
   granty_type: string;
+  refresh_token?: string;
 };
