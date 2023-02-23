@@ -15,12 +15,14 @@ import {
   getJWTUserId,
 } from "src/util";
 import { UserService } from "./user.service";
+import { CTCustomerService } from "./commercetools";
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private userService: UserService,
+    private ctCustomerService: CTCustomerService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -128,6 +130,11 @@ export class AuthService {
           email: true,
           id: true,
         },
+      });
+
+      await this.ctCustomerService.createCustomer({
+        ...dto,
+        customerNumber: user.id,
       });
 
       return ResponseBody().status(HttpStatus.OK).data(user).build();

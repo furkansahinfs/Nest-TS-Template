@@ -12,4 +12,24 @@ export class GetCustomersFilterDTO {
 
   @Optional()
   customerId?: string;
+
+  @Optional()
+  customerNumber?: string;
+}
+
+export class CreateCustomerDTO {
+  @IsNotEmpty()
+  firstName: string;
+
+  @IsNotEmpty()
+  lastName: string;
+
+  @IsNotEmpty()
+  username: string;
+
+  @IsNotEmpty()
+  password: string;
+
+  @Optional()
+  customerNumber: string;
 }
