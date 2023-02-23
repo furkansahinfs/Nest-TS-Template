@@ -1,1 +1,1 @@
-export { HttpStatus } from "./status.enum";
+export { GrantyTypes } from "./granty.enum";

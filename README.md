@@ -4,6 +4,7 @@
 
 - **yarn** instead of _npm_ is strongly recommended.
 - following **eslint rules** is required.
+- DO NOT FORGET TU RUN "PRISMA GENERATE" !
 
 ## Highlighted Technologies
 

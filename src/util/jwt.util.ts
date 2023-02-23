@@ -2,7 +2,7 @@ import { sign, SignOptions, verify } from "jsonwebtoken";
 
 export const verifyToken = (
   token: string,
-  keyName: "ACCESS_TOKEN_PRIVATE_KEY" | "REFRESH_TOKEN_PRIVATE_KEY",
+  keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
 ) => {
   const publicKey = Buffer.from(process.env[keyName], "base64").toString(
     "ascii",
@@ -10,6 +10,7 @@ export const verifyToken = (
 
   try {
     const decoded = verify(token, publicKey);
+
     return {
       valid: true,
       expired: false,
@@ -25,8 +26,8 @@ export const verifyToken = (
   }
 };
 
-export function generateAccessToken(
-  user: { email: string; userId: string },
+export function generateToken(
+  user: { username: string; userId: string },
   keyName: "ACCESS_TOKEN_PRIVATE_KEY" | "REFRESH_TOKEN_PRIVATE_KEY",
   options?: SignOptions | undefined,
 ) {
@@ -36,21 +37,23 @@ export function generateAccessToken(
 
   return sign(user, signingKey, {
     ...options,
-    expiresIn: process.env.ACCESS_TOKEN_TIME,
     algorithm: "RS256",
   });
 }
 
-export function getUserName(req) {
-  return verify(
-    req.headers["authorization"].split(" ")[1],
-    process.env.JWT_SECRET,
-  )["username"];
+export function getJWTUsername(token: string) {
+  const signingKey = Buffer.from(
+    process.env["REFRESH_TOKEN_PUBLIC_KEY"],
+    "base64",
+  ).toString("ascii");
+  const user = verify(token, signingKey);
+  return user?.["username"];
 }
 
-export function getUserId(req) {
-  return verify(
-    req.headers["authorization"].split(" ")[1],
-    process.env.JWT_SECRET,
-  )["userId"];
+export function getJWTUserId(token: string) {
+  const signingKey = Buffer.from(
+    process.env["REFRESH_TOKEN_PUBLIC_KEY"],
+    "base64",
+  ).toString("ascii");
+  return verify(token, signingKey)["userId"];
 }
