@@ -14,48 +14,18 @@ export class CTCustomerService {
   ) {}
 
   async getCustomers(dto: GetCustomersFilterDTO) {
-    if (dto?.customerId) {
-      return await this.getCustomerWithId(dto.customerId);
-    }
+    const whereString = dto?.customerId
+      ? `id="${dto.customerId}"`
+      : dto?.customerNumber
+      ? `customerNumber="${dto.customerNumber}"`
+      : undefined;
 
-    if (dto?.customerNumber) {
-      return await this.getCustomerWithNumber(dto.customerNumber);
-    }
-
-    return await CTApiRoot.customers()
-      .get({
-        queryArgs: { limit: parseInt(dto.limit), offset: parseInt(dto.offset) },
-      })
-      .execute()
-      .then(({ body }) =>
-        ResponseBody().status(HttpStatus.OK).data(body).build(),
-      )
-      .catch((error) =>
-        ResponseBody().status(HttpStatus.NOT_FOUND).message({ error }).build(),
-      );
-  }
-
-  async getCustomerWithId(customerId: string) {
-    return await CTApiRoot.customers()
-      .withId({ ID: customerId })
-      .get()
-      .execute()
-      .then(({ body }) =>
-        ResponseBody().status(HttpStatus.OK).data(body).build(),
-      )
-      .catch((error) =>
-        ResponseBody()
-          .status(HttpStatus.NOT_FOUND)
-          .message({ error, id: customerId })
-          .build(),
-      );
-  }
-
-  async getCustomerWithNumber(customerNumber: string) {
     return await CTApiRoot.customers()
       .get({
         queryArgs: {
-          where: `customerNumber="${customerNumber}"`,
+          limit: parseInt(dto.limit),
+          offset: parseInt(dto.offset),
+          where: whereString,
         },
       })
       .execute()
@@ -63,10 +33,7 @@ export class CTCustomerService {
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )
       .catch((error) =>
-        ResponseBody()
-          .status(HttpStatus.NOT_FOUND)
-          .message({ error, number: customerNumber })
-          .build(),
+        ResponseBody().status(HttpStatus.NOT_FOUND).message({ error }).build(),
       );
   }
 
