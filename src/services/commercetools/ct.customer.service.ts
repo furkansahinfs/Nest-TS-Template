@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
-import { GetCustomerDTO } from "src/dto";
+import { GetCustomersFilterDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
 import { ResponseBody } from "src/util";
 import { CTApiRoot } from "../../commercetools/";
@@ -12,22 +12,37 @@ export class CTCustomerService {
     private readonly i18n: I18nService,
   ) {}
 
-  async getCustomer(dto: GetCustomerDTO) {
-    const customer = await CTApiRoot.customers()
-      .withId({ ID: dto.customerId })
-      .get()
-      .execute();
-
-    if (customer) {
-      return ResponseBody().status(HttpStatus.OK).data(customer).build();
+  async getCustomers(dto: GetCustomersFilterDTO) {
+    if (dto?.customerId) {
+      return await this.getCustomerWithId(dto.customerId);
     }
 
-    return ResponseBody()
-      .status(HttpStatus.NOT_FOUND)
-      .message({
-        error: this.i18n.translate("commercetools.customer.customer_not_found"),
-        id: dto.customerId,
+    return await CTApiRoot.customers()
+      .get({
+        queryArgs: { limit: parseInt(dto.limit), offset: parseInt(dto.offset) },
       })
-      .build();
+      .execute()
+      .then(({ body }) =>
+        ResponseBody().status(HttpStatus.OK).data(body).build(),
+      )
+      .catch((error) =>
+        ResponseBody().status(HttpStatus.NOT_FOUND).message({ error }).build(),
+      );
+  }
+
+  async getCustomerWithId(customerId: string) {
+    return await CTApiRoot.customers()
+      .withId({ ID: customerId })
+      .get()
+      .execute()
+      .then(({ body }) =>
+        ResponseBody().status(HttpStatus.OK).data(body).build(),
+      )
+      .catch((error) =>
+        ResponseBody()
+          .status(HttpStatus.NOT_FOUND)
+          .message({ error, id: customerId })
+          .build(),
+      );
   }
 }

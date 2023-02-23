@@ -1,6 +1,15 @@
-import { IsNotEmpty } from "class-validator";
+import { Optional } from "@nestjs/common";
+import { IsNotEmpty, IsNumberString } from "class-validator";
 
-export class GetCustomerDTO {
+export class GetCustomersFilterDTO {
   @IsNotEmpty()
-  customerId: string;
+  @IsNumberString()
+  limit: string;
+
+  @IsNotEmpty()
+  @IsNumberString()
+  offset: string;
+
+  @Optional()
+  customerId?: string;
 }

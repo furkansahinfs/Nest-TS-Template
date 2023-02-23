@@ -8,7 +8,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get("/users")
-  async users(
+  async getUsers(
     @Query() filter: GetUsersFilterDTO,
     @Res({ passthrough: true }) res: Response,
   ) {

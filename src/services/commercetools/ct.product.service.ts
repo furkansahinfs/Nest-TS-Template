@@ -1,9 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
-import { GetProductDTO } from "src/dto";
+import { GetProductsFilterDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
 import { ResponseBody } from "src/util";
 import { CTApiRoot } from "../../commercetools/";
+
 @Injectable()
 export class CTProductService {
   constructor(
@@ -11,22 +12,43 @@ export class CTProductService {
     private readonly i18n: I18nService,
   ) {}
 
-  async getProduct(dto: GetProductDTO) {
-    const product = await CTApiRoot.products()
-      .withId({ ID: dto.productId })
-      .get()
-      .execute();
-
-    if (product) {
-      return ResponseBody().status(HttpStatus.OK).data(product).build();
+  async getProducts(dto: GetProductsFilterDTO) {
+    if (dto?.productId) {
+      return await this.getProductWithId(dto.productId);
     }
 
-    return ResponseBody()
-      .status(HttpStatus.NOT_FOUND)
-      .message({
-        error: this.i18n.translate("commercetools.product.product_not_found"),
-        id: dto.productId,
+    return await CTApiRoot.products()
+      .get({
+        queryArgs: { limit: parseInt(dto.limit), offset: parseInt(dto.offset) },
       })
-      .build();
+      .execute()
+      .then(({ body }) =>
+        ResponseBody().status(HttpStatus.OK).data(body).build(),
+      )
+      .catch((error) =>
+        ResponseBody()
+          .status(HttpStatus.NOT_FOUND)
+          .message({
+            error,
+            id: dto.productId,
+          })
+          .build(),
+      );
+  }
+
+  async getProductWithId(productId: string) {
+    return await CTApiRoot.products()
+      .withId({ ID: productId })
+      .get()
+      .execute()
+      .then(({ body }) =>
+        ResponseBody().status(HttpStatus.OK).data(body).build(),
+      )
+      .catch((error) =>
+        ResponseBody()
+          .status(HttpStatus.NOT_FOUND)
+          .message({ error, id: productId })
+          .build(),
+      );
   }
 }

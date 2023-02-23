@@ -47,6 +47,7 @@
     "zod": "^3.17.3"
   },
   "devDependencies": {
+    "@commercetools/sdk-types": "^0.1.2",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/testing": "^9.0.0",

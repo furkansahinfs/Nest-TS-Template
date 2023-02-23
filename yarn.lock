@@ -390,6 +390,11 @@
   resolved "https://registry.yarnpkg.com/@commercetools/sdk-middleware-logger/-/sdk-middleware-logger-3.0.0.tgz#4bfc7441d485b3f1046001f44200d12926accb84"
   integrity sha512-DhMXAA2yIch/AaGxy7st85Z1HFmeLtHWGkr9z5rX4xKjan4PHGB/IE5saAR+SNGHhs6+1Lp8vZEHDo3tFqVLmg==
 
+"@commercetools/sdk-types@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@commercetools/sdk-types/-/sdk-types-0.1.2.tgz#aea557a3672f53bdf7cebe8fa4ec39b34f71f522"
+  integrity sha512-j9yFGbdOxc4RRaYXzQbGLdm9tpLFOLkFmqKjaj+rOrkpNstsbiBNE8BgHt0D+rXlTGaNa4PjoK7PImCj69Jpuw==
+
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"

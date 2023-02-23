@@ -1,2 +1,2 @@
-export { GetCustomerDTO } from "./ct.customer.dto";
-export { GetProductDTO } from "./ct.product.dto";
+export { GetCustomersFilterDTO } from "./ct.customer.dto";
+export { GetProductsFilterDTO } from "./ct.product.dto";
