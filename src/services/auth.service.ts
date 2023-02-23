@@ -15,12 +15,14 @@ import {
   getJWTUserId,
 } from "src/util";
 import { UserService } from "./user.service";
+import { CTCustomerService } from "./commercetools";
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private userService: UserService,
+    private ctCustomerService: CTCustomerService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -61,7 +63,7 @@ export class AuthService {
   }
 
   private async authenticateUserByPassword(email: string, password: string) {
-    const maybeUser = await this.userService.findByUsername(email);
+    const maybeUser = await this.userService.findByUsername(email, true);
 
     if (!maybeUser) {
       return ResponseBody()
@@ -130,6 +132,11 @@ export class AuthService {
         },
       });
 
+      await this.ctCustomerService.createCustomer({
+        ...dto,
+        customerNumber: user.id,
+      });
+
       return ResponseBody().status(HttpStatus.OK).data(user).build();
     } catch (e) {
       return ResponseBody()
@@ -140,9 +147,9 @@ export class AuthService {
   }
 
   private async authenticateUserByRefreshToken(request: Request) {
-    const refreshToken = get(request, "headers.x-refresh");
+    const refreshToken = get(request, "headers.refresh-token");
     const newTokens: false | { access_token: string; refresh_token: string } =
-      await this.refreshAllTokens({ refreshToken: refreshToken.toString() });
+      await this.refreshAllTokens({ refreshToken: refreshToken as string });
 
     if (newTokens === false) {
       return ResponseBody()
@@ -160,8 +167,14 @@ export class AuthService {
       if (!decoded) {
         return false;
       }
-      const username = await getJWTUsername(refreshToken);
-      const userId = await getJWTUserId(refreshToken);
+      const username = await getJWTUsername(
+        refreshToken,
+        "REFRESH_TOKEN_PUBLIC_KEY",
+      );
+      const userId = await getJWTUserId(
+        refreshToken,
+        "REFRESH_TOKEN_PUBLIC_KEY",
+      );
       if (!username || !userId) {
         return false;
       }

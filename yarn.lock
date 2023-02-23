@@ -353,6 +353,11 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
   integrity sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==
 
+"@commercetools/api-request-builder@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@commercetools/api-request-builder/-/api-request-builder-6.0.0.tgz#7c0b8104f4d3655ac8bdb79dee3087d747018c0b"
+  integrity sha512-4QhfpWnW161XaRs/2o9h4ZVr21R31vYNHmpKbDh2Dp+lFR9IqdwiafP0fqfLzI+Xg6vTrA2s5coyxkh0qj7Gng==
+
 "@commercetools/platform-sdk@^4.6.0-alpha-associate-roles":
   version "4.6.0-alpha-associate-roles"
   resolved "https://registry.yarnpkg.com/@commercetools/platform-sdk/-/platform-sdk-4.6.0-alpha-associate-roles.tgz#9443def633dc787fc8fd64dc0369b9fb93399843"
@@ -389,6 +394,11 @@
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@commercetools/sdk-middleware-logger/-/sdk-middleware-logger-3.0.0.tgz#4bfc7441d485b3f1046001f44200d12926accb84"
   integrity sha512-DhMXAA2yIch/AaGxy7st85Z1HFmeLtHWGkr9z5rX4xKjan4PHGB/IE5saAR+SNGHhs6+1Lp8vZEHDo3tFqVLmg==
+
+"@commercetools/sdk-types@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@commercetools/sdk-types/-/sdk-types-0.1.2.tgz#aea557a3672f53bdf7cebe8fa4ec39b34f71f522"
+  integrity sha512-j9yFGbdOxc4RRaYXzQbGLdm9tpLFOLkFmqKjaj+rOrkpNstsbiBNE8BgHt0D+rXlTGaNa4PjoK7PImCj69Jpuw==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"

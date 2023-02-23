@@ -1,4 +1,3 @@
-import { get } from "lodash";
 import { Request, Response } from "express";
 import { getJWTUserId, ResponseBody, verifyToken } from "src/util";
 import { UserService } from "src/services";
@@ -14,11 +13,10 @@ export class JWTMiddleware implements NestMiddleware {
 
   async use(req: Request | any, res: Response, next: () => void) {
     const accessToken = req.headers.authorization;
-    const refreshToken = get(req, "headers.x-refresh");
 
     let user;
 
-    if (!accessToken || !refreshToken) {
+    if (!accessToken) {
       return res.status(HttpStatus.UNAUTHORIZED).send(
         ResponseBody()
           .status(HttpStatus.UNAUTHORIZED)
@@ -34,9 +32,12 @@ export class JWTMiddleware implements NestMiddleware {
       "ACCESS_TOKEN_PUBLIC_KEY",
     );
     //TODO - look at the condition
-    if ((expired && refreshToken) || decoded) {
+    if (expired) {
       try {
-        const userId = await getJWTUserId(refreshToken);
+        const userId = await getJWTUserId(
+          accessToken,
+          "ACCESS_TOKEN_PUBLIC_KEY",
+        );
         user = await this.userService.findByUserId(userId);
       } catch (error) {
         return res.status(HttpStatus.UNAUTHORIZED).send(
