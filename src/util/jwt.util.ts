@@ -10,7 +10,6 @@ export const verifyToken = (
 
   try {
     const decoded = verify(token, publicKey);
-    console.log(decoded);
     return {
       valid: true,
       expired: false,
@@ -27,7 +26,7 @@ export const verifyToken = (
 };
 
 export function generateToken(
-  user: { email: string; userId: string },
+  user: { username: string; userId: string },
   keyName: "ACCESS_TOKEN_PRIVATE_KEY" | "REFRESH_TOKEN_PRIVATE_KEY",
   options?: SignOptions | undefined,
 ) {
@@ -37,15 +36,22 @@ export function generateToken(
 
   return sign(user, signingKey, {
     ...options,
-    expiresIn: process.env.ACCESS_TOKEN_TIME,
     algorithm: "RS256",
   });
 }
 
 export function getJWTUsername(token: string) {
-  return verify(token, process.env.JWT_SECRET)["username"];
+  const signingKey = Buffer.from(
+    process.env["REFRESH_TOKEN_PUBLIC_KEY"],
+    "base64",
+  ).toString("ascii");
+  return verify(token, signingKey)["email"];
 }
 
 export function getJWTUserId(token: string) {
-  return verify(token, process.env.JWT_SECRET)["userId"];
+  const signingKey = Buffer.from(
+    process.env["REFRESH_TOKEN_PUBLIC_KEY"],
+    "base64",
+  ).toString("ascii");
+  return verify(token, signingKey)["userId"];
 }

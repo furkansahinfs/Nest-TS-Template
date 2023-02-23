@@ -1,10 +1,10 @@
 export type RegisterDTO = {
-  email: string;
+  username: string;
   password: string;
 };
 
 export type TokenDTO = {
-  email: string;
+  username: string;
   password: string;
   granty_type: string;
   refresh_token?: string;

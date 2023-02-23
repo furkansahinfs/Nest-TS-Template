@@ -21,6 +21,6 @@ import { JWTMiddleware } from "src/middleware";
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(JWTMiddleware).exclude("/ogin").forRoutes("/");
+    consumer.apply(JWTMiddleware).exclude("/auth/login").forRoutes("/");
   }
 }

@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "./prisma.service";
 import { RegisterDTO, TokenDTO } from "src/dto";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { I18nService } from "nestjs-i18n";
-import { HttpStatus } from "src/enums";
+import { GrantyTypes, HttpStatus } from "src/enums";
 import { get } from "lodash";
 import {
   comparePassword,
@@ -14,28 +14,42 @@ import {
   getJWTUsername,
   getJWTUserId,
 } from "src/util";
+import { UserService } from "./user.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
+    private userService: UserService,
     private readonly i18n: I18nService,
   ) {}
 
-  async authenticate(dto: TokenDTO, response: Response) {
-    const email = dto.email;
-    const password = dto.password;
+  async login(dto: TokenDTO, request: Request, response: Response) {
     const granty_type = dto.granty_type;
 
-    if (!granty_type || granty_type !== "password") {
-      return response.status(HttpStatus.BAD_REQUEST).send(
-        ResponseBody()
-          .message({ error: this.i18n.translate("auth.invalid_granty_type") })
-          .build(),
-      );
+    if (granty_type === GrantyTypes.PASSWORD) {
+      const email = dto.username;
+      const password = dto.password;
+      return this.authenticateUserByPassword(email, password, response);
     }
 
-    const maybeUser = await this.getUser(email);
+    if (granty_type === GrantyTypes.REFRESH) {
+      return this.authenticateUserByRefreshToken(request, response);
+    }
+
+    return response.status(HttpStatus.BAD_REQUEST).send(
+      ResponseBody()
+        .message({ error: this.i18n.translate("auth.invalid_granty_type") })
+        .build(),
+    );
+  }
+
+  async authenticateUserByPassword(
+    email: string,
+    password: string,
+    response: Response,
+  ) {
+    const maybeUser = await this.userService.findByUsername(email);
 
     if (!maybeUser) {
       return response.status(HttpStatus.NOT_FOUND).send(
@@ -59,8 +73,14 @@ export class AuthService {
         ResponseBody()
           .data({
             access_token: generateToken(
-              { email, userId: maybeUser.id },
+              { username: email, userId: maybeUser.id },
               "ACCESS_TOKEN_PRIVATE_KEY",
+              { expiresIn: process.env.ACCESS_TOKEN_TIME },
+            ),
+            refresh_token: generateToken(
+              { username: email, userId: maybeUser.id },
+              "REFRESH_TOKEN_PRIVATE_KEY",
+              { expiresIn: process.env.REFRESH_TOKEN_TIME },
             ),
           })
           .build(),
@@ -68,11 +88,29 @@ export class AuthService {
     }
   }
 
+  async authenticateUserByRefreshToken(request: Request, response: Response) {
+    const refreshToken = get(request, "headers.x-refresh");
+    const newTokens: false | { access_token: string; refresh_token: string } =
+      await this.refreshAllTokens({ refreshToken: refreshToken.toString() });
+
+    if (newTokens === false) {
+      return response.status(HttpStatus.NOT_FOUND).send(
+        ResponseBody()
+          .message({ error: this.i18n.translate("auth.user_not_found") })
+          .build(),
+      );
+    }
+
+    return response
+      .status(HttpStatus.OK)
+      .send(ResponseBody().data(newTokens).build());
+  }
+
   async register(dto: RegisterDTO, response: Response) {
-    const username = dto.email;
+    const username = dto.username;
     const encryptedPassword: string = await encryptPassword(dto.password);
 
-    const maybeUser = await this.getUser(username);
+    const maybeUser = await this.userService.findByUsername(username);
 
     if (encryptedPassword === "ERROR") {
       return response.status(HttpStatus.INTERNAL_SERVER_ERROR).send(
@@ -101,7 +139,7 @@ export class AuthService {
           id: true,
         },
       });
-      console.log(JSON.stringify(user));
+
       return response
         .status(HttpStatus.OK)
         .send(ResponseBody().data(user).build());
@@ -110,10 +148,10 @@ export class AuthService {
     }
   }
 
-  static async refreshAccessToken({ refreshToken }: { refreshToken: string }) {
+  async refreshAllTokens({ refreshToken }: { refreshToken: string }) {
     try {
       const { decoded } = verifyToken(refreshToken, "REFRESH_TOKEN_PUBLIC_KEY");
-      if (!decoded || !get(decoded, "session")) {
+      if (!decoded) {
         return false;
       }
       const username = await getJWTUsername(refreshToken);
@@ -121,29 +159,20 @@ export class AuthService {
       if (!username || !userId) {
         return false;
       }
-      const accessToken = generateToken(
-        { email: username, userId: userId },
+      const newAccessToken = generateToken(
+        { username, userId: userId },
         "ACCESS_TOKEN_PRIVATE_KEY",
-        { expiresIn: process.env.ACCESS_TOKEN_TIME }, // 15 minutes
+        { expiresIn: process.env.ACCESS_TOKEN_TIME },
       );
-      return accessToken;
+      const newRefreshToken = generateToken(
+        { username, userId: userId },
+        "REFRESH_TOKEN_PRIVATE_KEY",
+        { expiresIn: process.env.REFRESH_TOKEN_TIME },
+      );
+      return { access_token: newAccessToken, refresh_token: newRefreshToken };
     } catch (error) {
       console.error(error);
+      return false;
     }
-  }
-
-  async getUser(username: string) {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email: username,
-      },
-      select: {
-        email: true,
-        password: true,
-        id: true,
-        last_logged_in: true,
-      },
-    });
-    return user;
   }
 }
