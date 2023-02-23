@@ -10,6 +10,7 @@ export const verifyToken = (
 
   try {
     const decoded = verify(token, publicKey);
+
     return {
       valid: true,
       expired: false,
@@ -45,7 +46,8 @@ export function getJWTUsername(token: string) {
     process.env["REFRESH_TOKEN_PUBLIC_KEY"],
     "base64",
   ).toString("ascii");
-  return verify(token, signingKey)["email"];
+  const user = verify(token, signingKey);
+  return user?.["username"];
 }
 
 export function getJWTUserId(token: string) {

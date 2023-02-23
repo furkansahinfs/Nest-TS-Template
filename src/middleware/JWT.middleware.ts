@@ -2,9 +2,7 @@ import { get } from "lodash";
 import { Request, Response } from "express";
 import { getJWTUserId, ResponseBody, verifyToken } from "src/util";
 import { UserService } from "src/services";
-import { Injectable, NestMiddleware } from "@nestjs/common";
-import { UnauthorizedError } from "src/error";
-import { HttpStatus } from "src/enums";
+import { HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
 import { I18nService } from "nestjs-i18n";
 
 @Injectable()
@@ -15,15 +13,15 @@ export class JWTMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request | any, res: Response, next: () => void) {
-    const bearerHeader = req.headers.authorization;
-    const accessToken = bearerHeader && bearerHeader.split(" ")[1];
+    const accessToken = req.headers.authorization;
     const refreshToken = get(req, "headers.x-refresh");
 
     let user;
 
-    if (!bearerHeader || !accessToken) {
+    if (!accessToken || !refreshToken) {
       return res.status(HttpStatus.UNAUTHORIZED).send(
         ResponseBody()
+          .status(HttpStatus.UNAUTHORIZED)
           .message({
             error: this.i18n.translate("auth.status.unauthorized"),
           })
@@ -35,13 +33,20 @@ export class JWTMiddleware implements NestMiddleware {
       accessToken,
       "ACCESS_TOKEN_PUBLIC_KEY",
     );
-
-    if (decoded && expired && refreshToken) {
+    //TODO - look at the condition
+    if ((expired && refreshToken) || decoded) {
       try {
         const userId = await getJWTUserId(refreshToken);
         user = await this.userService.findByUserId(userId);
       } catch (error) {
-        throw new UnauthorizedError();
+        return res.status(HttpStatus.UNAUTHORIZED).send(
+          ResponseBody()
+            .status(HttpStatus.UNAUTHORIZED)
+            .message({
+              error: this.i18n.translate("auth.status.unauthorized"),
+            })
+            .build(),
+        );
       }
     }
 
