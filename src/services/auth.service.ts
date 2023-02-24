@@ -63,8 +63,9 @@ export class AuthService {
   }
 
   private async authenticateUserByPassword(email: string, password: string) {
-    const maybeUser = await this.userService.findByUsername(email, true);
-
+    const maybeUser = await this.userService.findByUsername(email, {
+      password: true,
+    });
     if (!maybeUser) {
       return ResponseBody()
         .status(HttpStatus.NOT_FOUND)
@@ -98,6 +99,11 @@ export class AuthService {
         })
         .build();
     }
+
+    return ResponseBody()
+      .status(HttpStatus.UNAUTHORIZED)
+      .message({ error: this.i18n.translate("auth.login_failed") })
+      .build();
   }
 
   async register(dto: RegisterDTO) {

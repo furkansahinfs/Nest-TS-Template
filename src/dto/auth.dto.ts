@@ -1,6 +1,6 @@
-import { Optional } from "@nestjs/common";
 import {
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -20,10 +20,10 @@ export class RegisterDTO {
   })
   password: string;
 
-  @Optional()
+  @IsOptional()
   firstName: string;
 
-  @Optional()
+  @IsOptional()
   lastName: string;
 }
 

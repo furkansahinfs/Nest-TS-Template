@@ -19,7 +19,10 @@ export class CTProductService {
 
     return await CTApiRoot.products()
       .get({
-        queryArgs: { limit: parseInt(dto.limit), offset: parseInt(dto.offset) },
+        queryArgs: {
+          limit: dto?.limit ? parseInt(dto.limit) : undefined,
+          offset: dto?.offset ? parseInt(dto.offset) : undefined,
+        },
       })
       .execute()
       .then(({ body }) =>

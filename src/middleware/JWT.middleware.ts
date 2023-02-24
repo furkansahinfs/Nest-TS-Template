@@ -12,8 +12,8 @@ export class JWTMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request | any, res: Response, next: () => void) {
-    const accessToken = req.headers.authorization;
-
+    const accessTokenStr = req.headers.authorization;
+    const accessToken = accessTokenStr?.replace("Bearer ", "");
     let user;
 
     if (!accessToken) {
@@ -31,8 +31,9 @@ export class JWTMiddleware implements NestMiddleware {
       accessToken,
       "ACCESS_TOKEN_PUBLIC_KEY",
     );
+
     //TODO - look at the condition
-    if (expired) {
+    if (!decoded || expired) {
       try {
         const userId = await getJWTUserId(
           accessToken,
