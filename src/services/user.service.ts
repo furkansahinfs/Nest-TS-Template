@@ -28,8 +28,8 @@ export class UserService {
       orderBy: {
         id: "desc",
       },
-      take: parseInt(dto.limit),
-      skip: parseInt(dto.offset),
+      take: dto?.limit ? parseInt(dto.limit) : undefined,
+      skip: dto?.offset ? parseInt(dto.offset) : undefined,
     });
 
     return ResponseBody().status(HttpStatus.OK).data(users).build();
@@ -51,14 +51,14 @@ export class UserService {
       .build();
   }
 
-  async findByUsername(username: string, password?: true) {
+  async findByUsername(username: string, exclude?: { password: true }) {
     const user = await this.prisma.user.findFirst({
       where: {
         email: username,
       },
       select: {
         email: true,
-        password: password ? password : false,
+        password: exclude?.password ? true : false,
         id: true,
         last_logged_in: true,
       },
@@ -66,14 +66,14 @@ export class UserService {
     return user;
   }
 
-  async findByUserId(userId: string, password?: true) {
+  async findByUserId(userId: string, exclude?: { password: true }) {
     const user = await this.prisma.user.findFirst({
       where: {
         id: userId,
       },
       select: {
         email: true,
-        password: password ? password : false,
+        password: exclude?.password ? true : false,
         id: true,
         last_logged_in: true,
       },

@@ -1,19 +1,18 @@
-import { Optional } from "@nestjs/common";
-import { IsNotEmpty, IsNumberString } from "class-validator";
+import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
 
 export class GetCustomersFilterDTO {
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumberString()
-  limit: string;
+  limit?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumberString()
-  offset: string;
+  offset?: string;
 
-  @Optional()
+  @IsOptional()
   customerId?: string;
 
-  @Optional()
+  @IsOptional()
   customerNumber?: string;
 }
 
@@ -30,6 +29,6 @@ export class CreateCustomerDTO {
   @IsNotEmpty()
   password: string;
 
-  @Optional()
-  customerNumber: string;
+  @IsOptional()
+  customerNumber?: string;
 }

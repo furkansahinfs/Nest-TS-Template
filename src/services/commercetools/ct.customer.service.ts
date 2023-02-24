@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { CreateCustomerDTO, GetCustomersFilterDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
-import { ResponseBody } from "src/util";
+import { ResponseBody, ResponseBodyProps } from "src/util";
 import { CTApiRoot } from "../../commercetools/";
 import { CustomerDraft } from "@commercetools/platform-sdk";
 
@@ -13,7 +13,7 @@ export class CTCustomerService {
     private readonly i18n: I18nService,
   ) {}
 
-  async getCustomers(dto: GetCustomersFilterDTO) {
+  async getCustomers(dto: GetCustomersFilterDTO): Promise<ResponseBodyProps> {
     const whereString = dto?.customerId
       ? `id="${dto.customerId}"`
       : dto?.customerNumber
@@ -23,8 +23,8 @@ export class CTCustomerService {
     return await CTApiRoot.customers()
       .get({
         queryArgs: {
-          limit: parseInt(dto.limit),
-          offset: parseInt(dto.offset),
+          limit: dto?.limit ? parseInt(dto.limit) : undefined,
+          offset: dto?.offset ? parseInt(dto.offset) : undefined,
           where: whereString,
         },
       })

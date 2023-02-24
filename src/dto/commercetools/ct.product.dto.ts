@@ -1,5 +1,4 @@
-import { Optional } from "@nestjs/common";
-import { IsNotEmpty, IsNumberString } from "class-validator";
+import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
 
 export class GetProductsFilterDTO {
   @IsNotEmpty()
@@ -10,6 +9,6 @@ export class GetProductsFilterDTO {
   @IsNumberString()
   offset: string;
 
-  @Optional()
+  @IsOptional()
   productId?: string;
 }
