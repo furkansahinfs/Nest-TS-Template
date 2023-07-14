@@ -16,45 +16,52 @@ export class JWTMiddleware implements NestMiddleware {
     const accessToken = accessTokenStr?.replace("Bearer ", "");
     let user;
 
+    console.log("11111");
+
     if (!accessToken) {
-      return res.status(HttpStatus.UNAUTHORIZED).send(
-        ResponseBody()
-          .status(HttpStatus.UNAUTHORIZED)
-          .message({
-            error: this.i18n.translate("auth.status.unauthorized"),
-          })
-          .build(),
-      );
+      return this.generateUnauthorizedResponse(res);
     }
 
     const { decoded, expired } = verifyToken(
       accessToken,
       "ACCESS_TOKEN_PUBLIC_KEY",
     );
-
-    //TODO - look at the condition
-    if (!decoded || expired) {
+    if (decoded || !expired) {
       try {
         const userId = await getJWTUserId(
           accessToken,
           "ACCESS_TOKEN_PUBLIC_KEY",
         );
-        user = await this.userService.findByUserId(userId);
+
+        user = await this.userService.getUserWithId(userId);
       } catch (error) {
-        return res.status(HttpStatus.UNAUTHORIZED).send(
-          ResponseBody()
-            .status(HttpStatus.UNAUTHORIZED)
-            .message({
-              error: this.i18n.translate("auth.status.unauthorized"),
-            })
-            .build(),
-        );
+        return res
+          .status(HttpStatus.UNAUTHORIZED)
+          .send(
+            ResponseBody()
+              .status(HttpStatus.UNAUTHORIZED)
+              .message(error)
+              .build(),
+          );
       }
+    } else {
+      return this.generateUnauthorizedResponse(res);
     }
 
     if (user) {
       req.user = user;
     }
     next();
+  }
+
+  private generateUnauthorizedResponse(res: Response) {
+    return res.status(HttpStatus.UNAUTHORIZED).send(
+      ResponseBody()
+        .status(HttpStatus.UNAUTHORIZED)
+        .message({
+          error: this.i18n.translate("auth.status.unauthorized"),
+        })
+        .build(),
+    );
   }
 }

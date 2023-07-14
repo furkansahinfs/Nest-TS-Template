@@ -5,17 +5,20 @@ import {
   ValidateIf,
 } from "class-validator";
 
-export class GetProductsFilterDTO {
-  @ValidateIf((o) => !o.productId)
+export class GetOrdersFilterDTO {
+  @ValidateIf((o) => !o.orderId)
   @IsNotEmpty()
   @IsNumberString()
   limit: string;
 
-  @ValidateIf((o) => !o.productId)
+  @ValidateIf((o) => !o.orderId)
   @IsNotEmpty()
   @IsNumberString()
   offset: string;
 
   @IsOptional()
-  productId?: string;
+  orderId?: string;
+
+  @IsOptional()
+  orderNumber?: string;
 }

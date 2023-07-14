@@ -1,5 +1,4 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { PrismaService } from "./prisma.service";
 import { LoginDTO, RefreshTokenDTO, RegisterDTO } from "src/dto";
 import { Request } from "express";
 import { I18nService } from "nestjs-i18n";
@@ -14,14 +13,15 @@ import {
   getJWTUsername,
   getJWTUserId,
 } from "src/util";
-import { UserService } from "./user.service";
+import { UserRepository } from "src/repository/user.repository";
+import { User } from "src/dto/user.dto";
+import { conf } from "src/config";
 import { CTCustomerService } from "./commercetools";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private userService: UserService,
+    private userRepository: UserRepository,
     private ctCustomerService: CTCustomerService,
     private readonly i18n: I18nService,
   ) {}
@@ -30,9 +30,9 @@ export class AuthService {
     const granty_type = dto.granty_type;
 
     if (granty_type === GrantyTypes.PASSWORD) {
-      const email = dto.username;
+      const email = dto.email;
       const password = dto.password;
-      const user = await this.userService.findByUsername(email);
+      const user = await this.userRepository.findByUsername(email);
 
       if (user) {
         return await this.authenticateUserByPassword(email, password);
@@ -62,8 +62,64 @@ export class AuthService {
       .build();
   }
 
+  async register(dto: RegisterDTO) {
+    const maybeUser = await this.userRepository.findByUsername(dto.email);
+
+    if (maybeUser) {
+      return ResponseBody()
+        .status(HttpStatus.CONFLICT)
+        .message({ error: this.i18n.translate("auth.user_already_exists") })
+        .build();
+    }
+
+    try {
+      const user = await this.createUser(dto);
+      await this.createCommercetoolsCustomer(dto, user.id);
+
+      return user;
+    } catch (e) {
+      await this.userRepository.deleteUser(dto.email);
+      return ResponseBody()
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .message({ error: e?.message ?? e })
+        .build();
+    }
+  }
+
+  private async createUser(dto: RegisterDTO): Promise<User> {
+    const encryptedPassword: string = await encryptPassword(dto.password);
+
+    if (encryptedPassword === "ERROR") {
+      return ResponseBody()
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .message({ error: this.i18n.translate("auth.status.unhandled") })
+        .build();
+    }
+
+    return await this.userRepository.saveUser(dto, encryptedPassword);
+  }
+
+  private async createCommercetoolsCustomer(dto: RegisterDTO, userId: string) {
+    const ctCustomer = await this.ctCustomerService.createCustomer({
+      ...dto,
+      customerNumber: userId,
+    });
+
+    if (ctCustomer?.message) {
+      throw new Error(ctCustomer.message?.error);
+    }
+
+    await this.userRepository
+      .updateUser(userId, {
+        ct_customer_id: ctCustomer?.data?.customer?.id,
+      })
+      .catch((err) => {
+        throw new Error(err);
+      });
+  }
+
   private async authenticateUserByPassword(email: string, password: string) {
-    const maybeUser = await this.userService.findByUsername(email, {
+    const maybeUser = await this.userRepository.findByUsername(email, {
       password: true,
     });
     if (!maybeUser) {
@@ -74,13 +130,8 @@ export class AuthService {
     }
 
     if (await comparePassword(password, maybeUser.password)) {
-      await this.prisma.user.update({
-        where: {
-          id: maybeUser.id,
-        },
-        data: {
-          last_logged_in: new Date(Date.now()),
-        },
+      await this.userRepository.updateUser(maybeUser?.id, {
+        last_logged_in: new Date(Date.now()),
       });
 
       return ResponseBody()
@@ -89,13 +140,14 @@ export class AuthService {
           access_token: generateToken(
             { username: email, userId: maybeUser.id },
             "ACCESS_TOKEN_PRIVATE_KEY",
-            { expiresIn: process.env.ACCESS_TOKEN_TIME },
+            { expiresIn: conf.ACCESS_TOKEN_TIME },
           ),
           refresh_token: generateToken(
             { username: email, userId: maybeUser.id },
             "REFRESH_TOKEN_PRIVATE_KEY",
-            { expiresIn: process.env.REFRESH_TOKEN_TIME },
+            { expiresIn: conf.REFRESH_TOKEN_TIME },
           ),
+          role: maybeUser.role,
         })
         .build();
     }
@@ -104,52 +156,6 @@ export class AuthService {
       .status(HttpStatus.UNAUTHORIZED)
       .message({ error: this.i18n.translate("auth.login_failed") })
       .build();
-  }
-
-  async register(dto: RegisterDTO) {
-    const username = dto.username;
-    const encryptedPassword: string = await encryptPassword(dto.password);
-
-    const maybeUser = await this.userService.findByUsername(username);
-
-    if (encryptedPassword === "ERROR") {
-      return ResponseBody()
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .message({ error: this.i18n.translate("auth.status.unhandled") })
-        .build();
-    }
-
-    if (maybeUser) {
-      return ResponseBody()
-        .status(HttpStatus.CONFLICT)
-        .message({ error: this.i18n.translate("auth.user_already_exists") })
-        .build();
-    }
-
-    try {
-      const user = await this.prisma.user.create({
-        data: {
-          email: username,
-          password: encryptedPassword,
-        },
-        select: {
-          email: true,
-          id: true,
-        },
-      });
-
-      await this.ctCustomerService.createCustomer({
-        ...dto,
-        customerNumber: user.id,
-      });
-
-      return ResponseBody().status(HttpStatus.OK).data(user).build();
-    } catch (e) {
-      return ResponseBody()
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .message({ error: "Error" })
-        .build();
-    }
   }
 
   private async authenticateUserByRefreshToken(request: Request) {
@@ -187,12 +193,12 @@ export class AuthService {
       const newAccessToken = generateToken(
         { username, userId: userId },
         "ACCESS_TOKEN_PRIVATE_KEY",
-        { expiresIn: process.env.ACCESS_TOKEN_TIME },
+        { expiresIn: conf.ACCESS_TOKEN_TIME },
       );
       const newRefreshToken = generateToken(
         { username, userId: userId },
         "REFRESH_TOKEN_PRIVATE_KEY",
-        { expiresIn: process.env.REFRESH_TOKEN_TIME },
+        { expiresIn: conf.REFRESH_TOKEN_TIME },
       );
       return { access_token: newAccessToken, refresh_token: newRefreshToken };
     } catch (error) {

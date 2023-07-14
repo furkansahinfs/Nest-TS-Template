@@ -1,30 +1,45 @@
-import { LineItemDraft } from "@commercetools/platform-sdk";
-import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
+import { AddressDraft, LineItemDraft } from "@commercetools/platform-sdk";
+import { IsEnum, IsNotEmpty, IsOptional, ValidateIf } from "class-validator";
+import { CartActions } from "src/enums";
 
 export class GetCartsFilterDTO {
   @IsOptional()
   cartId?: string;
-
-  @IsOptional()
-  @IsNumberString()
-  limit?: string;
-
-  @IsOptional()
-  @IsNumberString()
-  offset?: string;
 }
 
 export class CreateCartDTO {
-  @IsNotEmpty()
-  userId: string;
-
   products?: LineItemDraft[];
 }
 
 export class UpdateCartDTO {
   @IsNotEmpty()
-  products: LineItemDraft[];
+  @IsEnum(CartActions)
+  actionType: string;
 
+  @ValidateIf(
+    (o) =>
+      o.actionType === CartActions.CHANGEQUANTITY ||
+      o.actionType === CartActions.REMOVE,
+  )
   @IsNotEmpty()
+  lineItemId: string;
+
+  @ValidateIf((o) => o.actionType === CartActions.ADD)
+  @IsNotEmpty()
+  lineItemSKU: string;
+
+  @IsOptional()
   cartId: string;
+
+  @ValidateIf((o) => o.actionType === CartActions.CHANGEQUANTITY)
+  @IsNotEmpty()
+  quantity: number;
+
+  @ValidateIf(
+    (o) =>
+      o.actionType === CartActions.SET_BILLING_ADDRESS ||
+      o.actionType === CartActions.SET_SHIPPING_ADDRESS,
+  )
+  @IsNotEmpty()
+  address: AddressDraft;
 }

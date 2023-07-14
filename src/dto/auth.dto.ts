@@ -1,4 +1,5 @@
 import {
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -6,10 +7,11 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
+import { ROLES } from "src/enums";
 
 export class RegisterDTO {
   @IsNotEmpty()
-  username: string;
+  email: string;
 
   @IsString()
   @MinLength(6)
@@ -25,11 +27,15 @@ export class RegisterDTO {
 
   @IsOptional()
   lastName: string;
+
+  @IsOptional()
+  @IsEnum(ROLES)
+  role: string;
 }
 
 export class LoginDTO {
   @IsNotEmpty()
-  username: string;
+  email: string;
 
   @IsNotEmpty()
   password: string;

@@ -1,4 +1,4 @@
-# Nest TS Template
+# Nest.js Typescript Template
 
 ## Notes
 
@@ -14,6 +14,8 @@
 - dotenv
 - jade
 - jsonwebtoken
+- class-validator
+- commercetools
 - nestjs-i18n
 - node-fetch
 - nodemailer
@@ -26,6 +28,7 @@
     .
     ├── public             
     └── src
+      ├── config
       ├── controller
       ├── db
       ├── dto
@@ -35,6 +38,7 @@
       ├── middleware
       ├── modules
       ├── prisma
+      ├── repository
       ├── services
       ├── util
       ├── types

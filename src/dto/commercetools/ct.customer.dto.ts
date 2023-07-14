@@ -1,4 +1,27 @@
-import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumberString,
+  IsOptional,
+} from "class-validator";
+import { CustomerActions } from "src/enums";
+
+export class CreateCustomerDTO {
+  @IsNotEmpty()
+  firstName: string;
+
+  @IsNotEmpty()
+  lastName: string;
+
+  @IsNotEmpty()
+  email: string;
+
+  @IsNotEmpty()
+  password: string;
+
+  @IsOptional()
+  customerNumber?: string;
+}
 
 export class GetCustomersFilterDTO {
   @IsOptional()
@@ -16,18 +39,16 @@ export class GetCustomersFilterDTO {
   customerNumber?: string;
 }
 
-export class CreateCustomerDTO {
+export class UpdateCustomerDTO {
   @IsNotEmpty()
-  firstName: string;
+  @IsEnum(CustomerActions)
+  actionType: string;
 
   @IsNotEmpty()
-  lastName: string;
+  actionData: any;
 
-  @IsNotEmpty()
-  username: string;
-
-  @IsNotEmpty()
-  password: string;
+  @IsOptional()
+  customerId?: string;
 
   @IsOptional()
   customerNumber?: string;
