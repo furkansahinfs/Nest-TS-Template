@@ -1,47 +1,50 @@
-import { HttpStatus, Inject, Injectable, Scope } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { CreateCartDTO, UpdateCartDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
-import { ResponseBody, ResponseBodyProps } from "src/util";
+import { ResponseBody } from "src/util";
 import {
-  AddressDraft,
   Cart,
-  CartAddLineItemAction,
-  CartChangeLineItemQuantityAction,
   CartDraft,
-  CartRemoveLineItemAction,
-  CartSetBillingAddressAction,
-  CartSetShippingAddressAction,
-  CartUpdate,
   CartUpdateAction,
+  DiscountCode,
 } from "@commercetools/platform-sdk";
 import { CartActions } from "src/enums";
 import { CTService } from "./ct.service";
-import { CTApiRoot } from "src/commercetools";
+import { IResponse } from "src/types";
+import {
+  generateAddDiscountCodeAction,
+  generateAddLineItemAction,
+  generateAddressAction,
+  generateChangeineItemQuantityAction,
+  generateRemoveDiscountCodeAction,
+  generateRemoveLineItemAction,
+} from "./utils";
+import { CTCartSDK } from "src/commercetools";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class CTCartService extends CTService {
+  CTCartSDK: CTCartSDK;
   constructor(
     @Inject(REQUEST) protected readonly request: Request,
     private readonly i18n: I18nService,
   ) {
     super(request);
+    this.CTCartSDK = new CTCartSDK();
   }
 
-  async getCarts(params: { cartId?: string }): Promise<ResponseBodyProps> {
+  async getCarts(params: { cartId?: string }): Promise<IResponse> {
     const { cartId } = params;
     const whereString = cartId
       ? `id="${cartId}"`
       : `customerId="${this.customerId}"`;
 
-    return await CTApiRoot.carts()
-      .get({
-        queryArgs: {
-          where: whereString,
-        },
-      })
-      .execute()
+    return await this.CTCartSDK.findCarts({
+      where: whereString,
+      limit: undefined,
+      offset: undefined,
+    })
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )
@@ -50,16 +53,14 @@ export class CTCartService extends CTService {
       );
   }
 
-  async createCart(dto: CreateCartDTO): Promise<ResponseBodyProps> {
+  async createCart(dto: CreateCartDTO): Promise<IResponse> {
     if (this.customerId) {
       const cartDraft: CartDraft = {
         currency: "USD",
         customerId: this.customerId,
         lineItems: dto.products,
       };
-      return await CTApiRoot.carts()
-        .post({ body: cartDraft })
-        .execute()
+      return await this.CTCartSDK.createCart(cartDraft)
         .then(({ body }) =>
           ResponseBody().status(HttpStatus.OK).data(body).build(),
         )
@@ -69,8 +70,15 @@ export class CTCartService extends CTService {
     }
   }
 
-  async updateCart(dto: UpdateCartDTO): Promise<ResponseBodyProps> {
-    const { actionType, lineItemId, lineItemSKU, quantity, address } = dto;
+  async updateCart(dto: UpdateCartDTO): Promise<IResponse> {
+    const {
+      actionType,
+      lineItemId,
+      lineItemSKU,
+      quantity,
+      address,
+      discountCode,
+    } = dto;
     let cartId = dto.cartId;
     if (!cartId) {
       const cart: Cart | undefined = await this.getCustomerActiveCart(
@@ -82,20 +90,27 @@ export class CTCartService extends CTService {
     let action: CartUpdateAction = null;
 
     switch (actionType) {
-      case CartActions.ADD:
-        action = this.generateAddLineItemAction(lineItemSKU);
+      case CartActions.ADD_LINE_ITEM:
+        action = generateAddLineItemAction(lineItemSKU);
         break;
-      case CartActions.REMOVE:
-        action = this.generateRemoveLineItemAction(lineItemId);
+      case CartActions.REMOVE_LINE_ITEM:
+        action = generateRemoveLineItemAction(lineItemId);
         break;
-      case CartActions.CHANGEQUANTITY:
-        action = this.generateChangeineItemQuantityAction(lineItemId, quantity);
+      case CartActions.CHANGE_LINE_ITEM_QUANTITY:
+        action = generateChangeineItemQuantityAction(lineItemId, quantity);
         break;
       case CartActions.SET_SHIPPING_ADDRESS:
-        action = this.generateAddressAction(address, "SHIPPING");
+        action = generateAddressAction(address, "SHIPPING");
         break;
       case CartActions.SET_BILLING_ADDRESS:
-        action = this.generateAddressAction(address, "BILLING");
+        action = generateAddressAction(address, "BILLING");
+        break;
+      case CartActions.ADD_DISCOUNT_CODE:
+        action = generateAddDiscountCodeAction(discountCode);
+        break;
+      case CartActions.REMOVE_DISCOUNT_CODE:
+        const discountCodeObj = await this.checkDiscountCode(discountCode);
+        action = generateRemoveDiscountCodeAction(discountCodeObj?.id);
         break;
       default:
         break;
@@ -105,39 +120,34 @@ export class CTCartService extends CTService {
     return await this.updateCartWithActions(actions, cartId);
   }
 
-  private async getCustomerActiveCart(customerId: string) {
-    const whereString = `customerId="${customerId}"`;
+  async getCustomerActiveCart(customerId?: string) {
+    const where = `customerId="${this.customerId}" and cartState = "Active"`;
+    const cartQueryResponse = await this.CTCartSDK.findCarts({
+      where,
+      limit: undefined,
+      offset: undefined,
+    });
 
-    const result = await CTApiRoot.carts()
-      .get({
-        queryArgs: {
-          where: whereString,
-        },
-      })
-      .execute();
+    const cart: Cart | undefined = cartQueryResponse.body?.results?.[0];
 
-    if (!result?.body?.results?.[0]) {
-      const createdCart = await this.createCart({});
-      return createdCart?.data;
+    if (cart) {
+      return cart;
     }
 
-    return result?.body?.results?.[0];
+    const cartDraft: CartDraft = {
+      currency: "USD",
+      customerId: customerId,
+      lineItems: [],
+    };
+    const createdCart = await this.CTCartSDK.createCart(cartDraft);
+    return createdCart.body;
   }
 
   private async updateCartWithActions(
     lineItemsAction: CartUpdateAction[],
     cartId: string,
   ) {
-    const cartVersion = await this.getCartVersion(cartId);
-    const actionBody: CartUpdate = {
-      version: cartVersion,
-      actions: lineItemsAction,
-    };
-
-    return await CTApiRoot.carts()
-      .withId({ ID: cartId })
-      .post({ body: actionBody })
-      .execute()
+    return await this.CTCartSDK.updateCart(cartId, lineItemsAction)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )
@@ -146,74 +156,7 @@ export class CTCartService extends CTService {
       );
   }
 
-  private generateAddressAction(
-    address: AddressDraft,
-    type: "SHIPPING" | "BILLING",
-  ) {
-    const setAdressAction:
-      | CartSetShippingAddressAction
-      | CartSetBillingAddressAction = {
-      address: address,
-      action: type === "SHIPPING" ? "setShippingAddress" : "setBillingAddress",
-    };
-
-    return setAdressAction;
-  }
-
-  private generateAddLineItemAction(lineItemSKU: string): CartUpdateAction {
-    const addLineItemAction: CartAddLineItemAction = {
-      action: "addLineItem",
-      sku: lineItemSKU,
-      quantity: 1,
-    };
-
-    return addLineItemAction;
-  }
-
-  private generateRemoveLineItemAction(lineItemId: string): CartUpdateAction {
-    const removeLineItemAction: CartRemoveLineItemAction = {
-      action: "removeLineItem",
-      lineItemId,
-    };
-
-    return removeLineItemAction;
-  }
-
-  private generateChangeineItemQuantityAction(
-    lineItemId: string,
-    quantity: number,
-  ): CartUpdateAction {
-    const changeLineItemQuantityAction: CartChangeLineItemQuantityAction = {
-      action: "changeLineItemQuantity",
-      lineItemId,
-      quantity,
-    };
-
-    return changeLineItemQuantityAction;
-  }
-
-  private async getCartVersion(cartId: string) {
-    const cartResponse: ResponseBodyProps = await this.getCarts({ cartId });
-    return cartResponse?.data?.results[0]?.version;
-  }
-
-  private async setCartDefaults(cart: Cart) {
-    return await CTApiRoot.carts()
-      .withId({ ID: cart.id })
-      .post({
-        body: {
-          version: cart.version,
-          actions: [
-            { action: "setShippingAddress", address: { country: "US" } },
-          ],
-        },
-      })
-      .execute()
-      .then(({ body }) =>
-        ResponseBody().status(HttpStatus.OK).data(body).build(),
-      )
-      .catch((error) =>
-        ResponseBody().status(error?.statusCode).message({ error }).build(),
-      );
+  private async checkDiscountCode(discountCode: string): Promise<DiscountCode> {
+    return await this.CTCartSDK.getDiscount(discountCode);
   }
 }

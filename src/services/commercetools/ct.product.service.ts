@@ -1,35 +1,30 @@
-import { HttpStatus, Inject, Injectable, Scope } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { GetProductsFilterDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
 import { ResponseBody } from "src/util";
-import { CTService } from "./ct.service";
-import { CTApiRoot } from "src/commercetools";
-import { REQUEST } from "@nestjs/core";
-import { Request } from "express";
+import { CTProductSDK } from "src/commercetools";
+import { IResponse } from "src/types";
+import { generateProductWhereIdString } from "./utils";
 
-@Injectable({ scope: Scope.REQUEST })
-export class CTProductService extends CTService {
-  constructor(
-    @Inject(REQUEST) protected readonly request: Request,
-    private readonly i18n: I18nService,
-  ) {
-    super(request);
+@Injectable()
+export class CTProductService {
+  CTProductSDK: CTProductSDK;
+  constructor(private readonly i18n: I18nService) {
+    this.CTProductSDK = new CTProductSDK();
   }
 
-  async getProducts(dto: GetProductsFilterDTO) {
-    const whereString = dto?.productId
-      ? this.getWhereIdString(dto.productId)
+  async getProducts(dto: GetProductsFilterDTO): Promise<IResponse> {
+    const where = dto?.productIds
+      ? generateProductWhereIdString(dto.productIds)
       : undefined;
 
-    return await CTApiRoot.products()
-      .get({
-        queryArgs: {
-          limit: dto?.limit ? parseInt(dto.limit) : undefined,
-          offset: dto?.offset ? parseInt(dto.offset) : undefined,
-          where: whereString,
-        },
-      })
-      .execute()
+    const limit: number | undefined = dto?.limit
+      ? parseInt(dto.limit)
+      : undefined;
+
+    const offset: number | undefined = dto?.offset && parseInt(dto.offset);
+
+    return await this.CTProductSDK.findProducts({ where, limit, offset })
       .then(({ body }) =>
         ResponseBody()
           .status(HttpStatus.OK)
@@ -41,17 +36,14 @@ export class CTProductService extends CTService {
           .status(error?.statusCode)
           .message({
             error: error,
-            id: dto?.productId,
+            where,
           })
           .build();
       });
   }
 
-  async getProductWithId(productId: string) {
-    return await CTApiRoot.products()
-      .withId({ ID: productId })
-      .get()
-      .execute()
+  async getProductWithId(productId: string): Promise<IResponse> {
+    return await this.CTProductSDK.findProductById(productId)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )
@@ -61,13 +53,5 @@ export class CTProductService extends CTService {
           .message({ error, id: productId })
           .build(),
       );
-  }
-
-  private getWhereIdString(productIdParam: string) {
-    const ids = productIdParam.split(",");
-
-    return ids?.length > 1
-      ? `id in (${this.createWhereStringForInPredicate(ids)})`
-      : `id="${productIdParam}"`;
   }
 }

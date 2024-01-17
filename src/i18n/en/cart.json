@@ -1,0 +1,5 @@
+{
+    "cart": {
+        "cart_not_found": "Cart with given ID is not found."
+    }
+}

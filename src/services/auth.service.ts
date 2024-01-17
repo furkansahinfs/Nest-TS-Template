@@ -13,17 +13,17 @@ import {
   getJWTUsername,
   getJWTUserId,
 } from "src/util";
-import { UserRepository } from "src/repository/user.repository";
-import { User } from "src/dto/user.dto";
 import { conf } from "src/config";
+import { User } from "src/types";
+import { UserRepository } from "src/repository";
 import { CTCustomerService } from "./commercetools";
 
 @Injectable()
 export class AuthService {
   constructor(
     private userRepository: UserRepository,
-    private ctCustomerService: CTCustomerService,
     private readonly i18n: I18nService,
+    private ctCustomerService: CTCustomerService,
   ) {}
 
   async login(dto: LoginDTO) {
@@ -75,8 +75,12 @@ export class AuthService {
     try {
       const user = await this.createUser(dto);
       await this.createCommercetoolsCustomer(dto, user.id);
+      const updatedUser = await this.userRepository.findByUsername(user.email);
 
-      return user;
+      return ResponseBody()
+        .status(HttpStatus.CREATED)
+        .data(updatedUser)
+        .build();
     } catch (e) {
       await this.userRepository.deleteUser(dto.email);
       return ResponseBody()
@@ -100,7 +104,7 @@ export class AuthService {
   }
 
   private async createCommercetoolsCustomer(dto: RegisterDTO, userId: string) {
-    const ctCustomer = await this.ctCustomerService.createCustomer({
+    const ctCustomer: any = await this.ctCustomerService.createCustomer({
       ...dto,
       customerNumber: userId,
     });
@@ -109,13 +113,9 @@ export class AuthService {
       throw new Error(ctCustomer.message?.error);
     }
 
-    await this.userRepository
-      .updateUser(userId, {
-        ct_customer_id: ctCustomer?.data?.customer?.id,
-      })
-      .catch((err) => {
-        throw new Error(err);
-      });
+    await this.userRepository.updateUser(userId, {
+      ct_customer_id: ctCustomer?.data?.customer?.id,
+    });
   }
 
   private async authenticateUserByPassword(email: string, password: string) {
@@ -159,7 +159,7 @@ export class AuthService {
   }
 
   private async authenticateUserByRefreshToken(request: Request) {
-    const refreshToken = get(request, "headers.refresh-token");
+    const refreshToken = get(request, "headers.refresh_token");
     const newTokens: false | { access_token: string; refresh_token: string } =
       await this.refreshAllTokens({ refreshToken: refreshToken as string });
 

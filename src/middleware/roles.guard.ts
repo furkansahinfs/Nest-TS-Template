@@ -12,13 +12,11 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const request = context.switchToHttp().getRequest();
-    const role = request.user.role;
+    const role = request?.user?.role ?? request.config?.user?.role;
     return this.matchRoles(roles, role);
   }
 
-  matchRoles(roles: string[], authenticatedUserROle: string) {
-    return roles.some(
-      (role) => role === conf.ROLE_KEY.concat(authenticatedUserROle, ""),
-    );
+  matchRoles(roles: string[], userRole: string) {
+    return roles.some((role) => role === conf.ROLE_KEY.concat(userRole, ""));
   }
 }

@@ -2,9 +2,5 @@
     "customer": {
         "customer_not_found": "Customer with given ID is not found.",
         "customers_not_found": "Customers are not found."
-    },
-    "product": {
-        "product_not_found": "Product with given ID is not found.",
-        "products_not_found": "Products are not found."
     }
 }

@@ -11,6 +11,7 @@ import { ROLES } from "src/enums";
 
 export class RegisterDTO {
   @IsNotEmpty()
+  @IsString()
   email: string;
 
   @IsString()
@@ -23,9 +24,11 @@ export class RegisterDTO {
   password: string;
 
   @IsOptional()
+  @IsString()
   firstName: string;
 
   @IsOptional()
+  @IsString()
   lastName: string;
 
   @IsOptional()
@@ -35,9 +38,11 @@ export class RegisterDTO {
 
 export class LoginDTO {
   @IsNotEmpty()
+  @IsString()
   email: string;
 
   @IsNotEmpty()
+  @IsString()
   password: string;
 
   @IsNotEmpty()

@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaService } from "./prisma.service";
 import { I18nService } from "nestjs-i18n";
-import { GetUsersFilterDTO } from "src/dto";
+import { GetMeDTO, GetUsersFilterDTO } from "src/dto";
 import { ResponseBody, getJWTUserId } from "src/util";
-import { User } from "src/dto/user.dto";
-import { UserRepository } from "src/repository/user.repository";
+import { UserRepository } from "src/repository";
+import { User } from "src/types";
 
 @Injectable()
 export class UserService {
@@ -20,6 +20,14 @@ export class UserService {
     }
     const users = await this.userRepository.getUsers(dto);
     return ResponseBody().status(HttpStatus.OK).data(users).build();
+  }
+
+  async getMe(dto: GetMeDTO) {
+    return await this.getUserWithFilter({
+      userId: dto.userId,
+      limit: "1",
+      offset: "0",
+    });
   }
 
   private async getUserWithFilter(dto: GetUsersFilterDTO) {

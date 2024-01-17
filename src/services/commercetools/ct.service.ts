@@ -12,6 +12,14 @@ export class CTService {
     this.customerId = customerId;
   }
 
+  public getLimit(limit?: string): number | undefined {
+    return limit ? parseInt(limit) : undefined;
+  }
+
+  public getOffset(offset?: string): number | undefined {
+    return offset ? parseInt(offset) : undefined;
+  }
+
   protected createWhereStringForInPredicate(predicateStringArr: string[]) {
     const predicateStringsWithQuote =
       '"' + predicateStringArr.join('", "') + '"';

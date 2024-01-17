@@ -12,7 +12,7 @@ const scopes = [process.env.CT_PROJECT_SCOPES];
 
 // Configure authMiddlewareOptions
 const authMiddlewareOptions: AuthMiddlewareOptions = {
-  host: "https://auth.europe-west1.gcp.commercetools.com",
+  host: process.env.CT_AUTH_URL,
   projectKey: projectKey,
   credentials: {
     clientId: process.env.CT_CLIENT_ID,
@@ -24,7 +24,7 @@ const authMiddlewareOptions: AuthMiddlewareOptions = {
 
 // Configure httpMiddlewareOptions
 const httpMiddlewareOptions: HttpMiddlewareOptions = {
-  host: "https://api.europe-west1.gcp.commercetools.com",
+  host: process.env.CT_API_URL,
   fetch,
 };
 

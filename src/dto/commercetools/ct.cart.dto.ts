@@ -1,9 +1,17 @@
 import { AddressDraft, LineItemDraft } from "@commercetools/platform-sdk";
-import { IsEnum, IsNotEmpty, IsOptional, ValidateIf } from "class-validator";
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateIf,
+} from "class-validator";
 import { CartActions } from "src/enums";
 
-export class GetCartsFilterDTO {
+export class GetCartFilterDTO {
   @IsOptional()
+  @IsString()
   cartId?: string;
 }
 
@@ -14,25 +22,29 @@ export class CreateCartDTO {
 export class UpdateCartDTO {
   @IsNotEmpty()
   @IsEnum(CartActions)
+  @IsString()
   actionType: string;
 
   @ValidateIf(
     (o) =>
-      o.actionType === CartActions.CHANGEQUANTITY ||
-      o.actionType === CartActions.REMOVE,
+      o.actionType === CartActions.CHANGE_LINE_ITEM_QUANTITY ||
+      o.actionType === CartActions.REMOVE_LINE_ITEM,
   )
   @IsNotEmpty()
+  @IsString()
   lineItemId: string;
 
-  @ValidateIf((o) => o.actionType === CartActions.ADD)
+  @ValidateIf((o) => o.actionType === CartActions.ADD_LINE_ITEM)
   @IsNotEmpty()
+  @IsString()
   lineItemSKU: string;
 
   @IsOptional()
   cartId: string;
 
-  @ValidateIf((o) => o.actionType === CartActions.CHANGEQUANTITY)
+  @ValidateIf((o) => o.actionType === CartActions.CHANGE_LINE_ITEM_QUANTITY)
   @IsNotEmpty()
+  @IsNumber()
   quantity: number;
 
   @ValidateIf(
@@ -42,4 +54,17 @@ export class UpdateCartDTO {
   )
   @IsNotEmpty()
   address: AddressDraft;
+
+  @ValidateIf(
+    (o) =>
+      o.actionType === CartActions.ADD_DISCOUNT_CODE ||
+      o.actionType === CartActions.REMOVE_DISCOUNT_CODE,
+  )
+  @IsNotEmpty()
+  @IsString()
+  discountCode: string;
+
+  getType() {
+    return UpdateCartDTO;
+  }
 }

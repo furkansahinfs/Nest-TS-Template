@@ -1,0 +1,5 @@
+{
+    "product": {
+        "product_not_found": "Product with given ID is not found."
+    }
+}

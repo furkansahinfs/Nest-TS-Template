@@ -2,6 +2,7 @@ import {
   IsNotEmpty,
   IsNumberString,
   IsOptional,
+  IsString,
   ValidateIf,
 } from "class-validator";
 
@@ -17,8 +18,16 @@ export class GetOrdersFilterDTO {
   offset: string;
 
   @IsOptional()
+  @IsString()
   orderId?: string;
 
   @IsOptional()
+  @IsString()
   orderNumber?: string;
+}
+
+export class CreateOrderDTO {
+  @IsNotEmpty()
+  @IsString()
+  cartId: string;
 }

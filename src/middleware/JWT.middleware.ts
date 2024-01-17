@@ -1,8 +1,9 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { getJWTUserId, ResponseBody, verifyToken } from "src/util";
 import { UserService } from "src/services";
 import { HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
 import { I18nService } from "nestjs-i18n";
+import { RequestWithUser } from "src/interface";
 
 @Injectable()
 export class JWTMiddleware implements NestMiddleware {
@@ -11,12 +12,10 @@ export class JWTMiddleware implements NestMiddleware {
     private readonly i18n: I18nService,
   ) {}
 
-  async use(req: Request | any, res: Response, next: () => void) {
+  async use(req: RequestWithUser, res: Response, next: () => void) {
     const accessTokenStr = req.headers.authorization;
     const accessToken = accessTokenStr?.replace("Bearer ", "");
     let user;
-
-    console.log("11111");
 
     if (!accessToken) {
       return this.generateUnauthorizedResponse(res);
@@ -33,7 +32,8 @@ export class JWTMiddleware implements NestMiddleware {
           "ACCESS_TOKEN_PUBLIC_KEY",
         );
 
-        user = await this.userService.getUserWithId(userId);
+        const userRes = await this.userService.getMe({ userId });
+        user = userRes?.data;
       } catch (error) {
         return res
           .status(HttpStatus.UNAUTHORIZED)
@@ -51,6 +51,7 @@ export class JWTMiddleware implements NestMiddleware {
     if (user) {
       req.user = user;
     }
+
     next();
   }
 

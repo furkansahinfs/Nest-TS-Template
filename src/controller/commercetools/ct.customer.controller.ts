@@ -1,27 +1,44 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
-import { GetCustomersFilterDTO, UpdateCustomerDTO } from "src/dto";
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import {
+  CreateCustomerDTO,
+  GetCustomersFilterDTO,
+  UpdateCustomerDTO,
+} from "src/dto";
 import { ROLES } from "src/enums";
 import { RolesGuard } from "src/middleware";
 import { CTCustomerService } from "src/services";
 import { Roles } from "src/util";
 
-@Controller()
+@Controller("customers")
 export class CTCustomerController {
   constructor(private readonly ctCustomerService: CTCustomerService) {}
 
-  @Get("/ct/customers")
+  @Get()
   @Roles(ROLES.ADMIN, ROLES.CT_ADMIN)
   @UseGuards(RolesGuard)
   async getCustomers(@Query() dto: GetCustomersFilterDTO) {
     return await this.ctCustomerService.getCustomers(dto);
   }
 
-  @Get("/ct/customers/me")
+  @Get("/me")
   async getMe() {
     return await this.ctCustomerService.getMe();
   }
 
-  @Post("/ct/customers/action")
+  @Post("/new")
+  async create(@Body() dto: CreateCustomerDTO) {
+    return await this.ctCustomerService.createCustomer(dto);
+  }
+
+  @Patch()
   async updateCart(@Body() dto: UpdateCustomerDTO) {
     return await this.ctCustomerService.updateCustomer(dto);
   }

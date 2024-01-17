@@ -1,0 +1,6 @@
+{
+    "order": {
+        "cart_not_found": "Cart is not found for user.",
+        "order_not_found": "Order with given ID is not found."
+    }
+}

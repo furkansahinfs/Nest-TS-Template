@@ -1,22 +1,41 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
-import { CreateCartDTO, GetCartsFilterDTO, UpdateCartDTO } from "src/dto";
+import {
+  Body,
+  Controller,
+  Post,
+  Patch,
+  UseGuards,
+  Query,
+  Get,
+} from "@nestjs/common";
+import { CreateCartDTO, GetCartFilterDTO, UpdateCartDTO } from "src/dto";
+import { ROLES } from "src/enums";
+import { RolesGuard } from "src/middleware";
 import { CTCartService } from "src/services";
+import { Roles } from "src/util";
 
-@Controller()
+@Controller("carts")
 export class CTCartController {
   constructor(private readonly ctCartService: CTCartService) {}
 
-  @Get("/ct/carts")
-  async getCarts(@Query() dto: GetCartsFilterDTO) {
-    return await this.ctCartService.getCarts(dto);
+  @Get()
+  @Roles(ROLES.ADMIN, ROLES.CT_ADMIN)
+  @UseGuards(RolesGuard)
+  async getCarts(@Query() dto: GetCartFilterDTO) {
+    return await this.ctCartService.getCarts({ cartId: dto.cartId });
   }
 
-  @Post("/ct/carts")
+  @Get("/me")
+  @UseGuards(RolesGuard)
+  async getMyActiveCart() {
+    return await this.ctCartService.getCustomerActiveCart();
+  }
+
+  @Post()
   async createCart(@Body() dto: CreateCartDTO) {
     return await this.ctCartService.createCart(dto);
   }
 
-  @Post("/ct/carts/action")
+  @Patch()
   async updateCart(@Body() dto: UpdateCartDTO) {
     return await this.ctCartService.updateCart(dto);
   }

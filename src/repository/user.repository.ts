@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../services/prisma.service";
 import { I18nService } from "nestjs-i18n";
-import { GetUsersFilterDTO, User } from "src/dto/user.dto";
+import { GetUsersFilterDTO } from "src/dto/user.dto";
 import { RegisterDTO } from "src/dto";
 import { ROLES } from "src/enums";
-import { User as PrismaUser } from "@prisma/client";
 import { conf } from "src/config";
+import { User } from "src/types";
 
 @Injectable()
 export class UserRepository {

@@ -1,17 +1,11 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  Scope,
-} from "@nestjs/common";
+import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import {
   CreateCustomerDTO,
   GetCustomersFilterDTO,
   UpdateCustomerDTO,
 } from "src/dto";
 import { I18nService } from "nestjs-i18n";
-import { ResponseBody, ResponseBodyProps } from "src/util";
+import { ResponseBody } from "src/util";
 import {
   AddressDraft,
   Customer,
@@ -19,39 +13,37 @@ import {
   CustomerDraft,
   CustomerSetDefaultBillingAddressAction,
   CustomerSetDefaultShippingAddressAction,
-  CustomerUpdateAction,
 } from "@commercetools/platform-sdk";
 import { CTService } from "./ct.service";
 import { CustomerActions } from "src/enums/customerAction.enum";
-import { CTApiRoot } from "src/commercetools";
+import { CTCustomerSDK } from "src/commercetools";
+import { IResponse } from "src/types";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class CTCustomerService extends CTService {
+  CTCustomerSDK: CTCustomerSDK;
   constructor(
     @Inject(REQUEST) protected readonly request: Request,
     private readonly i18n: I18nService,
   ) {
     super(request);
+    this.CTCustomerSDK = new CTCustomerSDK();
   }
 
-  async getCustomers(dto: GetCustomersFilterDTO): Promise<ResponseBodyProps> {
-    const whereString = dto?.customerId
+  async getCustomers(dto: GetCustomersFilterDTO): Promise<IResponse> {
+    const where = dto?.customerId
       ? this.getWhereString({ customerIdParam: dto.customerId })
       : dto?.customerNumber
       ? this.getWhereString({ customerNumberParam: dto.customerNumber })
       : undefined;
 
-    return await CTApiRoot.customers()
-      .get({
-        queryArgs: {
-          limit: dto?.limit ? parseInt(dto.limit) : undefined,
-          offset: dto?.offset ? parseInt(dto.offset) : undefined,
-          where: whereString,
-        },
-      })
-      .execute()
+    return await this.CTCustomerSDK.findCustomers({
+      where,
+      limit: undefined,
+      offset: undefined,
+    })
       .then(({ body }) =>
         ResponseBody()
           .status(HttpStatus.OK)
@@ -63,30 +55,29 @@ export class CTCustomerService extends CTService {
       );
   }
 
-  async getMe(): Promise<ResponseBodyProps> {
-    return await CTApiRoot.customers()
-      .withId({ ID: this.customerId })
-      .get()
-      .execute()
-      .then(({ body }) =>
-        ResponseBody().status(HttpStatus.OK).data(body).build(),
-      )
-      .catch((error) =>
-        ResponseBody()
-          .status(error?.statusCode)
-          .message({ error: error?.body?.message })
-          .build(),
-      );
+  async getMe(): Promise<IResponse> {
+    const customer = await this.CTCustomerSDK.findCustomerById(this.customerId);
+    if (customer) {
+      return ResponseBody().status(HttpStatus.OK).data(customer).build();
+    }
+    return ResponseBody()
+      .status(HttpStatus.NOT_FOUND)
+      .message({ error: this.i18n.t("customer.customer_not_found") })
+      .build();
   }
 
   async createCustomer(dto: CreateCustomerDTO) {
-    const customerDraft: CustomerDraft = dto;
+    const customerDraft: CustomerDraft = {
+      email: dto.email,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      customerNumber: dto.customerNumber,
+      password: dto.password,
+    };
 
-    return await CTApiRoot.customers()
-      .post({ body: customerDraft })
-      .execute()
+    return await this.CTCustomerSDK.createCustomer(customerDraft)
       .then(({ body }) =>
-        ResponseBody().status(HttpStatus.OK).data(body).build(),
+        ResponseBody().status(HttpStatus.CREATED).data(body).build(),
       )
       .catch((error) =>
         ResponseBody()
@@ -99,27 +90,12 @@ export class CTCustomerService extends CTService {
   async updateCustomer(dto: UpdateCustomerDTO) {
     switch (dto.actionType) {
       case CustomerActions.SET_SHIPPING_ADDRESS:
-        return await this.setAddress(dto.actionData, "SHIPPING", true);
+        return await this.setAddress(dto.address, "SHIPPING", true);
       case CustomerActions.SET_BILLING_ADDRESS:
-        return await this.setAddress(dto.actionData, "BILLING", true);
+        return await this.setAddress(dto.address, "BILLING", true);
       default:
         break;
     }
-  }
-
-  async updateCustomerWithAction(action: CustomerUpdateAction) {
-    const customerVersion = await this.getCustomerVersion();
-
-    return await CTApiRoot.customers()
-      .withId({ ID: this.customerId })
-      .post({ body: { actions: [action], version: customerVersion } })
-      .execute()
-      .then(({ body }) => body)
-      .catch((error) => {
-        throw new BadRequestException({
-          message: { error: error?.body?.message },
-        });
-      });
   }
 
   private async setAddress(
@@ -132,9 +108,23 @@ export class CTCustomerService extends CTService {
       action: "addAddress",
     };
 
-    const updatedCustomer: Customer = await this.updateCustomerWithAction(
-      addAdressAction,
-    );
+    const updatedCustomerResponse: Customer =
+      await this.CTCustomerSDK.updateCustomer(this.customerId, [
+        addAdressAction,
+      ])
+        .then(({ body }) => body)
+        .catch((error) =>
+          ResponseBody()
+            .status(HttpStatus.BAD_REQUEST)
+            .message({ error: error?.body?.message })
+            .build(),
+        );
+
+    if (!updatedCustomerResponse?.id) {
+      return updatedCustomerResponse;
+    }
+
+    const updatedCustomer = updatedCustomerResponse;
 
     if (!overrideDefault) {
       return updatedCustomer;
@@ -143,22 +133,16 @@ export class CTCustomerService extends CTService {
     const setDefaultAddressAction:
       | CustomerSetDefaultShippingAddressAction
       | CustomerSetDefaultBillingAddressAction = {
-      addressId: updatedCustomer.addresses?.[0]?.id, // TODO filter first shipping/billing
+      addressId: updatedCustomer.addresses?.[0]?.id,
       action:
         type === "SHIPPING"
           ? "setDefaultShippingAddress"
           : "setDefaultBillingAddress",
     };
 
-    return await CTApiRoot.customers()
-      .withId({ ID: this.customerId })
-      .post({
-        body: {
-          actions: [setDefaultAddressAction],
-          version: updatedCustomer.version,
-        },
-      })
-      .execute()
+    return await this.CTCustomerSDK.updateCustomer(this.customerId, [
+      setDefaultAddressAction,
+    ])
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )
@@ -168,50 +152,6 @@ export class CTCustomerService extends CTService {
           .message({ error: error?.body?.message })
           .build(),
       );
-  }
-
-  async findCustomerByCustomerNumber(
-    customerNumber: string,
-  ): Promise<Customer> {
-    const whereString = `customerNumber="${customerNumber}"`;
-
-    const result = await CTApiRoot.customers()
-      .get({
-        queryArgs: {
-          where: whereString,
-        },
-      })
-      .execute();
-
-    return result?.body?.results?.[0];
-  }
-
-  async findCustomerByCustomerId(customerId: string): Promise<Customer> {
-    const whereString = `id="${customerId}"`;
-
-    const result = await CTApiRoot.customers()
-      .get({
-        queryArgs: {
-          where: whereString,
-        },
-      })
-      .execute();
-
-    return result?.body?.results?.[0];
-  }
-
-  private async getCustomerVersion(customerId?: string): Promise<number> {
-    const whereString = `id="${customerId ?? this.customerId}"`;
-
-    const result = await CTApiRoot.customers()
-      .get({
-        queryArgs: {
-          where: whereString,
-        },
-      })
-      .execute();
-
-    return result?.body?.results?.[0].version;
   }
 
   private getWhereString(whereParams: {

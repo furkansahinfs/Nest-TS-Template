@@ -1,4 +1,9 @@
-import { IsNotEmpty, IsNumberString, IsOptional } from "class-validator";
+import {
+  IsNotEmpty,
+  IsNumberString,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class GetUsersFilterDTO {
   @IsNotEmpty()
@@ -10,17 +15,16 @@ export class GetUsersFilterDTO {
   offset: string;
 
   @IsOptional()
+  @IsString()
   userId?: string;
 
   @IsOptional()
+  @IsString()
   username?: string;
 }
 
-export interface User {
-  id: string;
-  password?: string;
-  email?: string;
-  last_logged_in?: Date;
-  role?: string;
-  ct_customer_id?: string;
+export class GetMeDTO {
+  @IsNotEmpty()
+  @IsString()
+  userId: string;
 }
