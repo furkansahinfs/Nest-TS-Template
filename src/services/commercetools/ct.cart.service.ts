@@ -131,7 +131,7 @@ export class CTCartService extends CTService {
     const cart: Cart | undefined = cartQueryResponse.body?.results?.[0];
 
     if (cart) {
-      return cart;
+      return ResponseBody().status(HttpStatus.OK).data(cart).build();
     }
 
     const cartDraft: CartDraft = {
@@ -139,8 +139,13 @@ export class CTCartService extends CTService {
       customerId: customerId,
       lineItems: [],
     };
-    const createdCart = await this.CTCartSDK.createCart(cartDraft);
-    return createdCart.body;
+    return await this.CTCartSDK.createCart(cartDraft)
+    .then((createdCart) =>
+      ResponseBody().status(HttpStatus.OK).data(createdCart.body).build(),
+    )
+    .catch((error) =>
+      ResponseBody().status(error?.statusCode).message({ error }).build(),
+    );
   }
 
   private async updateCartWithActions(
