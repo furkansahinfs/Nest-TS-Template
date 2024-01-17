@@ -1,28 +1,18 @@
 import { MiddlewareConsumer, Module } from "@nestjs/common";
-import {
-  AppController,
-  AuthController,
-  CTCustomerController,
-  CTProductController,
-} from "src/controller";
-import {
-  AppService,
-  AuthService,
-  CTCartService,
-  CTCustomerService,
-  CTOrderService,
-  CTProductService,
-  UserService,
-} from "src/services";
-import { PrismaService } from "src/services/prisma.service";
+import { AppController } from "src/controller";
+import { AppService, PrismaService, UserService } from "src/services";
 import * as path from "path";
 import { I18nModule } from "nestjs-i18n";
 import { JWTMiddleware, ResponseStatusInterceptor } from "src/middleware";
-import { UserController } from "src/controller/user.controller";
-import { CTCartController } from "src/controller/commercetools/ct.cart.controller";
-import { CTOrderController } from "src/controller/commercetools/ct.order.controller";
-import { UserRepository } from "src/repository";
 import { APP_INTERCEPTOR } from "@nestjs/core";
+import {
+  AuthModule,
+  CartModule,
+  CustomerModule,
+  OrderModule,
+  ProductModule,
+} from "./subModules";
+import { UserRepository } from "src/repository";
 
 @Module({
   imports: [
@@ -33,25 +23,17 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
         watch: true,
       },
     }),
+    AuthModule,
+    CartModule,
+    CustomerModule,
+    OrderModule,
+    ProductModule,
   ],
-  controllers: [
-    AppController,
-    AuthController,
-    CTCartController,
-    CTCustomerController,
-    CTOrderController,
-    CTProductController,
-    UserController,
-  ],
+  controllers: [AppController],
   providers: [
-    PrismaService,
     AppService,
-    AuthService,
-    CTCartService,
-    CTCustomerService,
-    CTOrderService,
-    CTProductService,
     UserService,
+    PrismaService,
     UserRepository,
     {
       provide: APP_INTERCEPTOR,

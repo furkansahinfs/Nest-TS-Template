@@ -81,10 +81,8 @@ export class CTCartService extends CTService {
     } = dto;
     let cartId = dto.cartId;
     if (!cartId) {
-      const cart: Cart | undefined = await this.getCustomerActiveCart(
-        this.customerId,
-      );
-      cartId = cart?.id;
+      const cart: IResponse = await this.getCustomerActiveCart(this.customerId);
+      cartId = cart?.data?.id;
     }
     const actions: CartUpdateAction[] = [];
     let action: CartUpdateAction = null;
@@ -140,12 +138,12 @@ export class CTCartService extends CTService {
       lineItems: [],
     };
     return await this.CTCartSDK.createCart(cartDraft)
-    .then((createdCart) =>
-      ResponseBody().status(HttpStatus.OK).data(createdCart.body).build(),
-    )
-    .catch((error) =>
-      ResponseBody().status(error?.statusCode).message({ error }).build(),
-    );
+      .then((createdCart) =>
+        ResponseBody().status(HttpStatus.OK).data(createdCart.body).build(),
+      )
+      .catch((error) =>
+        ResponseBody().status(error?.statusCode).message({ error }).build(),
+      );
   }
 
   private async updateCartWithActions(
