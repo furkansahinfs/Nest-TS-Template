@@ -27,6 +27,7 @@
     .
     ├── public             
     └── src
+      ├── commercetools
       ├── config
       ├── controller
       ├── db
@@ -34,13 +35,14 @@
       ├── enums
       ├── error
       ├── i18n
+      ├── interface
       ├── middleware
       ├── modules
       ├── prisma
       ├── repository
       ├── services
-      ├── util
       ├── types
+      ├── util
 
 ## Naming Convention
 will be added.
