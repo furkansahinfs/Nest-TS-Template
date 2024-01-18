@@ -1,4 +1,4 @@
-# Nest.js Typescript Template
+# Nest.js Typescript Template with Commercetools
 
 ## Notes
 
