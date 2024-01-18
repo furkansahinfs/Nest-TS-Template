@@ -1,15 +1,22 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { GetProductsFilterDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
 import { ResponseBody } from "src/util";
 import { CTProductSDK } from "src/commercetools";
 import { IResponse } from "src/types";
 import { generateProductWhereIdString } from "./utils";
+import { CTService } from "./ct.service";
+import { REQUEST } from "@nestjs/core";
+import { Request } from "express";
 
 @Injectable()
-export class CTProductService {
+export class CTProductService extends CTService {
   CTProductSDK: CTProductSDK;
-  constructor(private readonly i18n: I18nService) {
+  constructor(
+    @Inject(REQUEST) protected readonly request: Request,
+    private readonly i18n: I18nService,
+  ) {
+    super(request);
     this.CTProductSDK = new CTProductSDK();
   }
 
@@ -18,13 +25,11 @@ export class CTProductService {
       ? generateProductWhereIdString(dto.productIds)
       : undefined;
 
-    const limit: number | undefined = dto?.limit
-      ? parseInt(dto.limit)
-      : undefined;
-
-    const offset: number | undefined = dto?.offset && parseInt(dto.offset);
-
-    return await this.CTProductSDK.findProducts({ where, limit, offset })
+    return await this.CTProductSDK.findProducts({
+      where,
+      limit: this.getLimit(dto?.limit),
+      offset: this.getOffset(dto?.offset),
+    })
       .then(({ body }) =>
         ResponseBody()
           .status(HttpStatus.OK)

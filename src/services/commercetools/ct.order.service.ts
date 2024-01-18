@@ -28,8 +28,8 @@ export class CTOrderService extends CTService {
 
     return await this.CTOrderSDK.findOrders({
       where,
-      limit: this.getLimit(),
-      offset: this.getOffset(),
+      limit: this.getLimit(dto?.limit),
+      offset: this.getOffset(dto?.offset),
     })
       .then(({ body }) =>
         ResponseBody()

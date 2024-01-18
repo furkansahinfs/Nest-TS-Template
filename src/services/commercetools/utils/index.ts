@@ -10,3 +10,4 @@ export {
 } from "./generateDiscountCodeAction";
 export { generateOrderWhereString } from "./generateOrderWhereString";
 export { generateProductWhereIdString } from "./generateProductWhereString";
+export { generateCustomerWhereString } from "./generateCustomerWhereString";

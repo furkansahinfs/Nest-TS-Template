@@ -1,3 +1,5 @@
+import { createWhereStringForInPredicate } from "./createWhereStringForInPredicate";
+
 export function generateOrderWhereString(whereParams: {
   orderIdParam?: string;
   orderNumberParam?: string;
@@ -21,10 +23,4 @@ export function generateOrderWhereString(whereParams: {
   }
 
   return undefined;
-}
-
-function createWhereStringForInPredicate(predicateStringArr: string[]) {
-  const predicateStringsWithQuote = '"' + predicateStringArr.join('", "') + '"';
-
-  return predicateStringsWithQuote;
 }

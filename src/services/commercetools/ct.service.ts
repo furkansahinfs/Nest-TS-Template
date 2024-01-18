@@ -19,11 +19,4 @@ export class CTService {
   public getOffset(offset?: string): number | undefined {
     return offset ? parseInt(offset) : undefined;
   }
-
-  protected createWhereStringForInPredicate(predicateStringArr: string[]) {
-    const predicateStringsWithQuote =
-      '"' + predicateStringArr.join('", "') + '"';
-
-    return predicateStringsWithQuote;
-  }
 }
