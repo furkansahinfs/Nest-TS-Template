@@ -32,8 +32,7 @@ export class JWTMiddleware implements NestMiddleware {
           "ACCESS_TOKEN_PUBLIC_KEY",
         );
 
-        const userRes = await this.userService.getMe({ userId });
-        user = userRes?.data;
+        user = await this.userService.getUserWithId(userId);
       } catch (error) {
         return res
           .status(HttpStatus.UNAUTHORIZED)

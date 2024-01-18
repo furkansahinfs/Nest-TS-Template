@@ -38,7 +38,7 @@ export class CTCustomerController {
     return await this.ctCustomerService.createCustomer(dto);
   }
 
-  @Patch()
+  @Post("/action")
   async updateCart(@Body() dto: UpdateCustomerDTO) {
     return await this.ctCustomerService.updateCustomer(dto);
   }

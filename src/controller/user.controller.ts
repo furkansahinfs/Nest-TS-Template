@@ -1,9 +1,10 @@
-import { Controller, Get, Query, UseGuards } from "@nestjs/common";
-import { GetMeDTO, GetUsersFilterDTO } from "src/dto";
+import { Controller, Get, Query, Req, UseGuards } from "@nestjs/common";
+import { GetUsersFilterDTO } from "src/dto";
 import { UserService } from "src/services";
 import { RolesGuard } from "src/middleware";
 import { Roles } from "src/util";
 import { ROLES } from "src/enums";
+import { get } from "lodash";
 
 @Controller("users")
 export class UserController {
@@ -17,7 +18,7 @@ export class UserController {
   }
 
   @Get("/me")
-  async getMe(@Query() filter: GetMeDTO) {
-    return await this.userService.getMe(filter);
+  async getMe() {
+    return await this.userService.getMe();
   }
 }

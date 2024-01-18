@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Patch,
-  UseGuards,
-  Query,
-  Get,
-} from "@nestjs/common";
+import { Body, Controller, Post, UseGuards, Query, Get } from "@nestjs/common";
 import { CreateCartDTO, GetCartFilterDTO, UpdateCartDTO } from "src/dto";
 import { ROLES } from "src/enums";
 import { RolesGuard } from "src/middleware";
@@ -35,7 +27,7 @@ export class CTCartController {
     return await this.ctCartService.createCart(dto);
   }
 
-  @Patch()
+  @Post("/action")
   async updateCart(@Body() dto: UpdateCartDTO) {
     return await this.ctCartService.updateCart(dto);
   }

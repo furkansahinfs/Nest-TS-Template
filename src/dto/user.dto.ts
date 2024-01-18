@@ -22,9 +22,3 @@ export class GetUsersFilterDTO {
   @IsString()
   username?: string;
 }
-
-export class GetMeDTO {
-  @IsNotEmpty()
-  @IsString()
-  userId: string;
-}
