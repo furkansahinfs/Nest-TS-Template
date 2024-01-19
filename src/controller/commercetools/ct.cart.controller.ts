@@ -21,7 +21,6 @@ export class CTCartController {
   }
 
   @Get("/me")
-  @UseGuards(RolesGuard)
   async getMyActiveCart(): Promise<IResponse<Cart>> {
     return await this.ctCartService.getCustomerActiveCart();
   }
