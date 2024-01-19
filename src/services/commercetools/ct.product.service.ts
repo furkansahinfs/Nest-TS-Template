@@ -3,9 +3,10 @@ import { GetProductsFilterDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
 import { ResponseBody } from "src/util";
 import { CTProductSDK } from "src/commercetools";
-import { IResponse } from "src/types";
-import { generateProductWhereIdString } from "./utils";
+import { IResponse, QueryData } from "src/types";
 import { CTService } from "./ct.service";
+import { Product } from "@commercetools/platform-sdk";
+import { generateProductWhereIdString } from "./utils";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 
@@ -20,7 +21,9 @@ export class CTProductService extends CTService {
     this.CTProductSDK = new CTProductSDK();
   }
 
-  async getProducts(dto: GetProductsFilterDTO): Promise<IResponse> {
+  async getProducts(
+    dto: GetProductsFilterDTO,
+  ): Promise<IResponse<QueryData<Product>>> {
     const where = dto?.productIds
       ? generateProductWhereIdString(dto.productIds)
       : undefined;
@@ -47,7 +50,7 @@ export class CTProductService extends CTService {
       });
   }
 
-  async getProductWithId(productId: string): Promise<IResponse> {
+  async getProductWithId(productId: string): Promise<IResponse<Product>> {
     return await this.CTProductSDK.findProductById(productId)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
