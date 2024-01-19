@@ -3,10 +3,12 @@ import { CreateOrderDTO, GetOrdersFilterDTO } from "src/dto";
 import { I18nService } from "nestjs-i18n";
 import { ResponseBody } from "src/util";
 import { CTService } from "./ct.service";
+import { IResponse, QueryData } from "src/types";
+import { Cart, Order } from "@commercetools/platform-sdk";
+import { generateOrderWhereString } from "./utils";
+import { CTOrderSDK } from "src/commercetools";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
-import { CTOrderSDK } from "src/commercetools";
-import { generateOrderWhereString } from "./utils";
 
 @Injectable()
 export class CTOrderService extends CTService {
@@ -19,7 +21,9 @@ export class CTOrderService extends CTService {
     this.CTOrderSDK = new CTOrderSDK();
   }
 
-  async getOrders(dto: GetOrdersFilterDTO) {
+  async getOrders(
+    dto: GetOrdersFilterDTO,
+  ): Promise<IResponse<QueryData<Order>>> {
     const where = dto?.orderId
       ? generateOrderWhereString({ orderIdParam: dto.orderId })
       : dto?.orderNumber
@@ -48,7 +52,9 @@ export class CTOrderService extends CTService {
       );
   }
 
-  async getMyOrders(dto: GetOrdersFilterDTO) {
+  async getMyOrders(
+    dto: GetOrdersFilterDTO,
+  ): Promise<IResponse<QueryData<Order>>> {
     const where = `customerId="${this.customerId}"`;
 
     return await this.CTOrderSDK.findMyOrders({
@@ -73,7 +79,7 @@ export class CTOrderService extends CTService {
       );
   }
 
-  async getOrderWithId(orderId: string) {
+  async getOrderWithId(orderId: string): Promise<IResponse<Order>> {
     return await this.CTOrderSDK.findOrderById(orderId)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
@@ -86,9 +92,9 @@ export class CTOrderService extends CTService {
       );
   }
 
-  async createOrder(dto: CreateOrderDTO) {
+  async createOrder(dto: CreateOrderDTO): Promise<IResponse<Order>> {
     try {
-      const existingCart = await this.CTOrderSDK.findCartById(
+      const existingCart: Cart | undefined = await this.CTOrderSDK.findCartById(
         dto.cartId,
         this.customerId,
       );
