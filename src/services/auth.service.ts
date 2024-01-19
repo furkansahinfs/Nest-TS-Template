@@ -124,7 +124,7 @@ export class AuthService {
     }
 
     await this.userRepository.updateUser(userId, {
-      ct_customer_id: ctCustomer?.customer?.id,
+      ct_customer_id: ctCustomer?.data?.customer?.id,
     });
   }
 
