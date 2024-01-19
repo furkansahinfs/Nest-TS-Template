@@ -16,6 +16,7 @@ export class GetCartFilterDTO {
 }
 
 export class CreateCartDTO {
+  @IsOptional()
   products?: LineItemDraft[];
 }
 
