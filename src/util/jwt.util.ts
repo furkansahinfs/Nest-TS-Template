@@ -1,11 +1,17 @@
-import { sign, SignOptions, verify } from "jsonwebtoken";
+import { JwtPayload, sign, SignOptions, verify } from "jsonwebtoken";
 import { conf } from "src/config";
 
 export const verifyToken = (
   token: string,
   keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
-) => {
-  const publicKey = Buffer.from(conf[keyName], "base64").toString("ascii");
+): {
+  valid: boolean;
+  expired: boolean;
+  decoded: string | JwtPayload;
+} => {
+  const publicKey: string = Buffer.from(conf[keyName], "base64").toString(
+    "ascii",
+  );
 
   try {
     const decoded = verify(token, publicKey);
@@ -26,11 +32,13 @@ export const verifyToken = (
 };
 
 export function generateToken(
-  user: { username: string; userId: string },
+  user: { username: string; userId: string; role: string },
   keyName: "ACCESS_TOKEN_PRIVATE_KEY" | "REFRESH_TOKEN_PRIVATE_KEY",
   options?: SignOptions | undefined,
-) {
-  const signingKey = Buffer.from(conf[keyName], "base64").toString("ascii");
+): string {
+  const signingKey: string = Buffer.from(conf[keyName], "base64").toString(
+    "ascii",
+  );
 
   return sign(user, signingKey, {
     ...options,
@@ -39,19 +47,27 @@ export function generateToken(
   });
 }
 
+export function getJWTUser(
+  token: string,
+  keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
+): string | JwtPayload {
+  const signingKey: string = Buffer.from(conf[keyName], "base64").toString(
+    "ascii",
+  );
+  const user = verify(token, signingKey);
+  return user;
+}
+
 export function getJWTUsername(
   token: string,
   keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
-) {
-  const signingKey = Buffer.from(conf[keyName], "base64").toString("ascii");
-  const user = verify(token, signingKey);
-  return user?.["username"];
+): string | undefined {
+  return getJWTUser(token, keyName)?.["username"];
 }
 
 export function getJWTUserId(
   token: string,
   keyName: "ACCESS_TOKEN_PUBLIC_KEY" | "REFRESH_TOKEN_PUBLIC_KEY",
-) {
-  const signingKey = Buffer.from(conf[keyName], "base64").toString("ascii");
-  return verify(token, signingKey)["userId"];
+): string | undefined {
+  return getJWTUser(token, keyName)?.["userId"];
 }

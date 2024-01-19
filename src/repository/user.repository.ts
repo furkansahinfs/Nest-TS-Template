@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../services/prisma.service";
 import { I18nService } from "nestjs-i18n";
-import { GetUsersFilterDTO } from "src/dto/user.dto";
-import { RegisterDTO } from "src/dto";
+import { GetUsersFilterDTO, RegisterDTO } from "src/dto";
 import { ROLES } from "src/enums";
 import { conf } from "src/config";
+import { User as PrismaUser } from "@prisma/client";
 import { User } from "src/types";
 
 @Injectable()
@@ -39,13 +39,13 @@ export class UserRepository {
     username: string,
     exclude?: { password: true },
   ): Promise<User> {
-    const user = await this.prisma.user.findFirst({
+    const user: User = await this.prisma.user.findFirst({
       where: {
         email: username,
       },
       select: {
         email: true,
-        password: exclude?.password ? true : false,
+        password: exclude?.password ?? true,
         id: true,
         last_logged_in: true,
         role: true,
@@ -64,13 +64,13 @@ export class UserRepository {
     userId: string,
     exclude?: { password: true },
   ): Promise<User> {
-    const user = await this.prisma.user.findFirst({
+    const user: User = await this.prisma.user.findFirst({
       where: {
         id: userId,
       },
       select: {
         email: true,
-        password: exclude?.password ? true : false,
+        password: exclude?.password ?? true,
         id: true,
         last_logged_in: true,
         role: true,
@@ -115,8 +115,8 @@ export class UserRepository {
   }
 
   //TODO describe data prisma type
-  public async updateUser(userId: string, data) {
-    await this.prisma.user.update({
+  public async updateUser(userId: string, data): Promise<PrismaUser> {
+    return await this.prisma.user.update({
       where: {
         id: userId,
       },

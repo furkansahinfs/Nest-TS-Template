@@ -2,7 +2,7 @@ import { HttpStatus } from "@nestjs/common";
 import { IResponse, ResponseMessage } from "src/types";
 
 export function ResponseBody() {
-  const response: IResponse = {
+  const response: IResponse<any> = {
     status: HttpStatus.OK,
     success: true,
     message: undefined,
