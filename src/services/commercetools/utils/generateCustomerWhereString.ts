@@ -3,7 +3,7 @@ import { createWhereStringForInPredicate } from "./createWhereStringForInPredica
 export const generateCustomerWhereString = (whereParams: {
   customerIdParam?: string;
   customerNumberParam?: string;
-}) => {
+}): string | undefined => {
   const { customerIdParam, customerNumberParam } = whereParams;
 
   if (customerIdParam) {

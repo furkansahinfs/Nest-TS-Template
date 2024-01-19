@@ -13,14 +13,15 @@ import {
   CustomerDraft,
   CustomerSetDefaultBillingAddressAction,
   CustomerSetDefaultShippingAddressAction,
+  CustomerSignInResult,
 } from "@commercetools/platform-sdk";
 import { CTService } from "./ct.service";
 import { CustomerActions } from "src/enums/customerAction.enum";
 import { CTCustomerSDK } from "src/commercetools";
-import { IResponse } from "src/types";
+import { IResponse, QueryData } from "src/types";
+import { generateCustomerWhereString } from "./utils";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
-import { generateCustomerWhereString } from "./utils";
 
 @Injectable()
 export class CTCustomerService extends CTService {
@@ -33,7 +34,9 @@ export class CTCustomerService extends CTService {
     this.CTCustomerSDK = new CTCustomerSDK();
   }
 
-  async getCustomers(dto: GetCustomersFilterDTO): Promise<IResponse> {
+  async getCustomers(
+    dto: GetCustomersFilterDTO,
+  ): Promise<IResponse<QueryData<Customer>>> {
     const where = dto?.customerId
       ? generateCustomerWhereString({ customerIdParam: dto.customerId })
       : dto?.customerNumber
@@ -56,7 +59,7 @@ export class CTCustomerService extends CTService {
       );
   }
 
-  async getMe(): Promise<IResponse> {
+  async getMe(): Promise<IResponse<Customer>> {
     const customer = await this.CTCustomerSDK.findCustomerById(this.customerId);
     if (customer) {
       return ResponseBody().status(HttpStatus.OK).data(customer).build();
@@ -67,7 +70,9 @@ export class CTCustomerService extends CTService {
       .build();
   }
 
-  async createCustomer(dto: CreateCustomerDTO) {
+  async createCustomer(
+    dto: CreateCustomerDTO,
+  ): Promise<IResponse<CustomerSignInResult>> {
     const customerDraft: CustomerDraft = {
       email: dto.email,
       firstName: dto.firstName,
@@ -88,7 +93,7 @@ export class CTCustomerService extends CTService {
       );
   }
 
-  async updateCustomer(dto: UpdateCustomerDTO) {
+  async updateCustomer(dto: UpdateCustomerDTO): Promise<IResponse<Customer>> {
     switch (dto.actionType) {
       case CustomerActions.SET_SHIPPING_ADDRESS:
         return await this.setAddress(dto.address, "SHIPPING", true);
@@ -103,7 +108,7 @@ export class CTCustomerService extends CTService {
     address: AddressDraft,
     type: "SHIPPING" | "BILLING",
     overrideDefault?: boolean,
-  ) {
+  ): Promise<IResponse<Customer>> {
     const addAdressAction: CustomerAddAddressAction = {
       address: address,
       action: "addAddress",
@@ -122,13 +127,16 @@ export class CTCustomerService extends CTService {
         );
 
     if (!updatedCustomerResponse?.id) {
-      return updatedCustomerResponse;
+      return ResponseBody()
+        .status(HttpStatus.OK)
+        .data(updatedCustomerResponse)
+        .build();
     }
 
     const updatedCustomer = updatedCustomerResponse;
 
     if (!overrideDefault) {
-      return updatedCustomer;
+      return ResponseBody().status(HttpStatus.OK).data(updatedCustomer).build();
     }
 
     return await this.overrideDefaultAddress(
@@ -140,7 +148,7 @@ export class CTCustomerService extends CTService {
   private async overrideDefaultAddress(
     addressId: string,
     type: "SHIPPING" | "BILLING",
-  ) {
+  ): Promise<IResponse<Customer>> {
     const setDefaultAddressAction:
       | CustomerSetDefaultShippingAddressAction
       | CustomerSetDefaultBillingAddressAction = {

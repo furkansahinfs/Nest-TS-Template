@@ -3,7 +3,9 @@ import {
   CartRemoveDiscountCodeAction,
 } from "@commercetools/platform-sdk";
 
-export const generateAddDiscountCodeAction = (discountCode: string) => {
+export const generateAddDiscountCodeAction = (
+  discountCode: string,
+): CartAddDiscountCodeAction => {
   const addDiscountCodeAction: CartAddDiscountCodeAction = {
     code: discountCode,
     action: "addDiscountCode",
@@ -12,7 +14,9 @@ export const generateAddDiscountCodeAction = (discountCode: string) => {
   return addDiscountCodeAction;
 };
 
-export const generateRemoveDiscountCodeAction = (discountCodeId: string) => {
+export const generateRemoveDiscountCodeAction = (
+  discountCodeId: string,
+): CartRemoveDiscountCodeAction => {
   const removeDiscountCodeAction: CartRemoveDiscountCodeAction = {
     discountCode: { id: discountCodeId, typeId: "discount-code" },
     action: "removeDiscountCode",

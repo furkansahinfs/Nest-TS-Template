@@ -3,7 +3,7 @@ import { createWhereStringForInPredicate } from "./createWhereStringForInPredica
 export function generateOrderWhereString(whereParams: {
   orderIdParam?: string;
   orderNumberParam?: string;
-}) {
+}): string | undefined {
   const { orderIdParam, orderNumberParam } = whereParams;
 
   if (orderIdParam) {

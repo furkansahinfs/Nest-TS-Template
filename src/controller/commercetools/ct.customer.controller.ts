@@ -1,12 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from "@nestjs/common";
+import { Customer, CustomerSignInResult } from "@commercetools/platform-sdk";
+import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import {
   CreateCustomerDTO,
   GetCustomersFilterDTO,
@@ -15,6 +8,7 @@ import {
 import { ROLES } from "src/enums";
 import { RolesGuard } from "src/middleware";
 import { CTCustomerService } from "src/services";
+import { IResponse, QueryData } from "src/types";
 import { Roles } from "src/util";
 
 @Controller("customers")
@@ -24,22 +18,28 @@ export class CTCustomerController {
   @Get()
   @Roles(ROLES.ADMIN, ROLES.CT_ADMIN)
   @UseGuards(RolesGuard)
-  async getCustomers(@Query() dto: GetCustomersFilterDTO) {
+  async getCustomers(
+    @Query() dto: GetCustomersFilterDTO,
+  ): Promise<IResponse<QueryData<Customer>>> {
     return await this.ctCustomerService.getCustomers(dto);
   }
 
   @Get("/me")
-  async getMe() {
+  async getMe(): Promise<IResponse<Customer>> {
     return await this.ctCustomerService.getMe();
   }
 
   @Post("/new")
-  async create(@Body() dto: CreateCustomerDTO) {
+  async create(
+    @Body() dto: CreateCustomerDTO,
+  ): Promise<IResponse<CustomerSignInResult>> {
     return await this.ctCustomerService.createCustomer(dto);
   }
 
   @Post("/action")
-  async updateCart(@Body() dto: UpdateCustomerDTO) {
+  async updateCart(
+    @Body() dto: UpdateCustomerDTO,
+  ): Promise<IResponse<Customer>> {
     return await this.ctCustomerService.updateCustomer(dto);
   }
 }
