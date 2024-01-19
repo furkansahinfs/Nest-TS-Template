@@ -1,9 +1,12 @@
 import {
   Cart,
   CartDraft,
+  CartPagedQueryResponse,
   CartUpdate,
   CartUpdateAction,
+  ClientResponse,
   DiscountCode,
+  DiscountCodePagedQueryResponse,
 } from "@commercetools/platform-sdk";
 import { ICTCartSDK } from "./ct.cart.sdk.interface";
 import { CTApiRoot } from "../CTApiRoot";
@@ -23,26 +26,28 @@ export class CTCartSDK implements ICTCartSDK {
 
   async findCartById(cartId: string): Promise<Cart> {
     const where = `id="${cartId}"`;
-    const cartByIdResponse = await this.findCarts({
-      where,
-      limit: 1,
-      offset: 0,
-    });
+    const cartByIdResponse: ClientResponse<CartPagedQueryResponse> =
+      await this.findCarts({
+        where,
+        limit: 1,
+        offset: 0,
+      });
     return cartByIdResponse.body.results[0] ?? undefined;
   }
 
   async findCartByCustomerId(customerId: string): Promise<Cart> {
     const where = `customerId="${customerId}"`;
-    const cartByCustomerIdResponse = await this.findCarts({
-      where,
-      limit: 1,
-      offset: 0,
-    });
+    const cartByCustomerIdResponse: ClientResponse<CartPagedQueryResponse> =
+      await this.findCarts({
+        where,
+        limit: 1,
+        offset: 0,
+      });
 
     return cartByCustomerIdResponse.body.results[0] ?? undefined;
   }
 
-  async createCart(cartDraft: CartDraft) {
+  async createCart(cartDraft: CartDraft): Promise<ClientResponse<Cart>> {
     return await CTApiRoot.carts().post({ body: cartDraft }).execute();
   }
 
@@ -60,17 +65,18 @@ export class CTCartSDK implements ICTCartSDK {
   }
 
   async getDiscount(discountCode: string): Promise<DiscountCode> {
-    const discountResponse = await CTApiRoot.discountCodes()
-      .get({
-        queryArgs: { where: `code="${discountCode}"` },
-      })
-      .execute();
+    const discountResponse: ClientResponse<DiscountCodePagedQueryResponse> =
+      await CTApiRoot.discountCodes()
+        .get({
+          queryArgs: { where: `code="${discountCode}"` },
+        })
+        .execute();
 
     return discountResponse.body?.results?.[0];
   }
 
   private async getCartVersion(cartId: string): Promise<number> {
-    const cartResponse = await this.findCartById(cartId);
+    const cartResponse: Cart = await this.findCartById(cartId);
     return cartResponse?.version;
   }
 }

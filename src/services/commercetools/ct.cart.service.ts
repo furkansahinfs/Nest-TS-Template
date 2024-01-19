@@ -5,7 +5,9 @@ import { ResponseBody } from "src/util";
 import {
   Cart,
   CartDraft,
+  CartPagedQueryResponse,
   CartUpdateAction,
+  ClientResponse,
   DiscountCode,
 } from "@commercetools/platform-sdk";
 import { CartActions } from "src/enums";
@@ -34,7 +36,9 @@ export class CTCartService extends CTService {
     this.CTCartSDK = new CTCartSDK();
   }
 
-  async getCarts(params: { cartId?: string }): Promise<IResponse> {
+  async getCarts(params: {
+    cartId?: string;
+  }): Promise<IResponse<CartPagedQueryResponse>> {
     const { cartId } = params;
     const whereString = cartId
       ? `id="${cartId}"`
@@ -42,8 +46,8 @@ export class CTCartService extends CTService {
 
     return await this.CTCartSDK.findCarts({
       where: whereString,
-      limit: undefined,
-      offset: undefined,
+      limit: this.getLimit(),
+      offset: this.getOffset(),
     })
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
@@ -53,7 +57,7 @@ export class CTCartService extends CTService {
       );
   }
 
-  async createCart(dto: CreateCartDTO): Promise<IResponse> {
+  async createCart(dto: CreateCartDTO): Promise<IResponse<Cart>> {
     if (this.customerId) {
       const cartDraft: CartDraft = {
         currency: "USD",
@@ -70,7 +74,7 @@ export class CTCartService extends CTService {
     }
   }
 
-  async updateCart(dto: UpdateCartDTO): Promise<IResponse> {
+  async updateCart(dto: UpdateCartDTO): Promise<IResponse<Cart>> {
     const {
       actionType,
       lineItemId,
@@ -81,7 +85,7 @@ export class CTCartService extends CTService {
     } = dto;
     let cartId = dto.cartId;
     if (!cartId) {
-      const cart: IResponse = await this.getCustomerActiveCart();
+      const cart: IResponse<Cart> = await this.getCustomerActiveCart();
       cartId = cart?.data?.id;
     }
     const actions: CartUpdateAction[] = [];
@@ -118,13 +122,14 @@ export class CTCartService extends CTService {
     return await this.updateCartWithActions(actions, cartId);
   }
 
-  async getCustomerActiveCart() {
+  async getCustomerActiveCart(): Promise<IResponse<Cart>> {
     const where = `customerId="${this.customerId}" and cartState = "Active"`;
-    const cartQueryResponse = await this.CTCartSDK.findCarts({
-      where,
-      limit: undefined,
-      offset: undefined,
-    });
+    const cartQueryResponse: ClientResponse<CartPagedQueryResponse> =
+      await this.CTCartSDK.findCarts({
+        where,
+        limit: this.getLimit(),
+        offset: this.getOffset(),
+      });
 
     const cart: Cart | undefined = cartQueryResponse.body?.results?.[0];
 
@@ -149,7 +154,7 @@ export class CTCartService extends CTService {
   private async updateCartWithActions(
     lineItemsAction: CartUpdateAction[],
     cartId: string,
-  ) {
+  ): Promise<IResponse<Cart>> {
     return await this.CTCartSDK.updateCart(cartId, lineItemsAction)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
