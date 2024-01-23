@@ -4,7 +4,7 @@ import { AppService, PrismaService, UserService } from "src/services";
 import * as path from "path";
 import { I18nModule } from "nestjs-i18n";
 import { JWTMiddleware, ResponseStatusInterceptor } from "src/middleware";
-import { APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import {
   AuthModule,
   CartModule,
@@ -13,6 +13,7 @@ import {
   ProductModule,
 } from "./subModules";
 import { UserRepository } from "src/repository";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 
 @Module({
   imports: [
@@ -23,6 +24,12 @@ import { UserRepository } from "src/repository";
         watch: true,
       },
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     AuthModule,
     CartModule,
     CustomerModule,
@@ -38,6 +45,10 @@ import { UserRepository } from "src/repository";
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseStatusInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

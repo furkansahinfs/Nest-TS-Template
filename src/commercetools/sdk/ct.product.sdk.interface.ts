@@ -1,7 +1,7 @@
 import {
   ClientResponse,
-  Product,
-  ProductPagedQueryResponse,
+  ProductProjection,
+  ProductProjectionPagedQueryResponse,
 } from "@commercetools/platform-sdk";
 
 interface FindProductsParam {
@@ -15,6 +15,8 @@ export interface ICTProductSDK {
     where,
     limit,
     offset,
-  }: FindProductsParam): Promise<ClientResponse<ProductPagedQueryResponse>>;
-  findProductById(orderId: string): Promise<ClientResponse<Product>>;
+  }: FindProductsParam): Promise<
+    ClientResponse<ProductProjectionPagedQueryResponse>
+  >;
+  findProductById(orderId: string): Promise<ClientResponse<ProductProjection>>;
 }

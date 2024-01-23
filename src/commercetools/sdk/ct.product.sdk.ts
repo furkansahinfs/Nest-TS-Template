@@ -1,8 +1,8 @@
 import { CTApiRoot } from "../CTApiRoot";
 import {
   ClientResponse,
-  Product,
-  ProductPagedQueryResponse,
+  ProductProjection,
+  ProductProjectionPagedQueryResponse,
 } from "@commercetools/platform-sdk";
 import { ICTProductSDK } from "./ct.product.sdk.interface";
 
@@ -11,8 +11,8 @@ export class CTProductSDK implements ICTProductSDK {
     where,
     limit,
     offset,
-  }): Promise<ClientResponse<ProductPagedQueryResponse>> {
-    return await CTApiRoot.products()
+  }): Promise<ClientResponse<ProductProjectionPagedQueryResponse>> {
+    return await CTApiRoot.productProjections()
       .get({
         queryArgs: {
           limit: limit,
@@ -23,7 +23,12 @@ export class CTProductSDK implements ICTProductSDK {
       .execute();
   }
 
-  async findProductById(productId: string): Promise<ClientResponse<Product>> {
-    return await CTApiRoot.products().withId({ ID: productId }).get().execute();
+  async findProductById(
+    productId: string,
+  ): Promise<ClientResponse<ProductProjection>> {
+    return await CTApiRoot.productProjections()
+      .withId({ ID: productId })
+      .get()
+      .execute();
   }
 }
