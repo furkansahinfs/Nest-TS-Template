@@ -22,12 +22,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
             .build(),
         );
     } else {
-      response.status(exception?.statusCode || HttpStatus.BAD_REQUEST).json(
-        ResponseBody()
-          .status(exception?.statusCode || HttpStatus.BAD_REQUEST)
-          .message(exception?.response?.message ?? { error: exception })
-          .build(),
-      );
+      response
+        .status(
+          exception?.statusCode ?? exception?.status ?? HttpStatus.BAD_REQUEST,
+        )
+        .json(
+          ResponseBody()
+            .status(
+              exception?.statusCode ??
+                exception?.status ??
+                HttpStatus.BAD_REQUEST,
+            )
+            .message({ error: exception })
+            .build(),
+        );
     }
   }
 }
