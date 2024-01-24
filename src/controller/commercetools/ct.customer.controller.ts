@@ -21,25 +21,25 @@ export class CTCustomerController {
   async getCustomers(
     @Query() dto: GetCustomersFilterDTO,
   ): Promise<IResponse<QueryData<Customer>>> {
-    return await this.ctCustomerService.getCustomers(dto);
+    return this.ctCustomerService.getCustomers(dto);
   }
 
   @Get("/me")
   async getMe(): Promise<IResponse<Customer>> {
-    return await this.ctCustomerService.getMe();
+    return this.ctCustomerService.getMe();
   }
 
   @Post("/new")
   async create(
     @Body() dto: CreateCustomerDTO,
   ): Promise<IResponse<CustomerSignInResult>> {
-    return await this.ctCustomerService.createCustomer(dto);
+    return this.ctCustomerService.createCustomer(dto);
   }
 
   @Post("/action")
   async updateCart(
     @Body() dto: UpdateCustomerDTO,
   ): Promise<IResponse<Customer>> {
-    return await this.ctCustomerService.updateCustomer(dto);
+    return this.ctCustomerService.updateCustomer(dto);
   }
 }

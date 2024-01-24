@@ -14,7 +14,7 @@ export class CTOrderSDK implements ICTOrderSDK {
     limit,
     offset,
   }): Promise<ClientResponse<OrderPagedQueryResponse>> {
-    return await CTApiRoot.orders()
+    return CTApiRoot.orders()
       .get({
         queryArgs: {
           limit: limit,
@@ -30,15 +30,15 @@ export class CTOrderSDK implements ICTOrderSDK {
     limit,
     offset,
   }): Promise<ClientResponse<OrderPagedQueryResponse>> {
-    return await this.findOrders({ where, limit, offset });
+    return this.findOrders({ where, limit, offset });
   }
 
   async findOrderById(orderId: string): Promise<ClientResponse<Order>> {
-    return await CTApiRoot.orders().withId({ ID: orderId }).get().execute();
+    return CTApiRoot.orders().withId({ ID: orderId }).get().execute();
   }
 
   async createOrder(cart: Cart): Promise<ClientResponse<Order>> {
-    return await CTApiRoot.orders().post({ body: cart }).execute();
+    return CTApiRoot.orders().post({ body: cart }).execute();
   }
 
   async findCartById(cartId: string, customerId: string): Promise<Cart> {

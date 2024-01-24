@@ -89,7 +89,7 @@ export class UserRepository {
     encryptedPassword: string,
   ): Promise<User> {
     const { email, firstName, lastName } = dto;
-    return await this.prisma.user.create({
+    return this.prisma.user.create({
       data: {
         email,
         password: encryptedPassword,
@@ -116,7 +116,7 @@ export class UserRepository {
 
   //TODO describe data prisma type
   public async updateUser(userId: string, data): Promise<PrismaUser> {
-    return await this.prisma.user.update({
+    return this.prisma.user.update({
       where: {
         id: userId,
       },

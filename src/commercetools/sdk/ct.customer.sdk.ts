@@ -15,7 +15,7 @@ export class CTCustomerSDK implements ICTCustomerSDK {
     limit,
     offset,
   }): Promise<ClientResponse<CustomerPagedQueryResponse>> {
-    return await CTApiRoot.customers()
+    return CTApiRoot.customers()
       .get({
         queryArgs: {
           limit,
@@ -50,7 +50,7 @@ export class CTCustomerSDK implements ICTCustomerSDK {
   async createCustomer(
     customerDraft: CustomerDraft,
   ): Promise<ClientResponse<CustomerSignInResult>> {
-    return await CTApiRoot.customers().post({ body: customerDraft }).execute();
+    return CTApiRoot.customers().post({ body: customerDraft }).execute();
   }
 
   async updateCustomer(
@@ -59,7 +59,7 @@ export class CTCustomerSDK implements ICTCustomerSDK {
   ): Promise<ClientResponse<Customer>> {
     const customer: Customer = await this.findCustomerById(customerId);
 
-    return await CTApiRoot.customers()
+    return CTApiRoot.customers()
       .withId({ ID: customerId })
       .post({
         body: { actions: customerUpdateActions, version: customer.version },

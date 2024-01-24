@@ -17,12 +17,9 @@ export class AuthController {
     @Req() request: Request,
   ): Promise<IResponse<SignInResults | Tokens>> {
     if (dto.granty_type === GrantyTypes.PASSWORD) {
-      return await this.authService.login(dto as LoginDTO);
+      return this.authService.login(dto as LoginDTO);
     } else {
-      return await this.authService.refreshToken(
-        dto as RefreshTokenDTO,
-        request,
-      );
+      return this.authService.refreshToken(dto as RefreshTokenDTO, request);
     }
   }
   @Post("/register")

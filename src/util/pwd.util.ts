@@ -1,7 +1,7 @@
 import { compare, hash } from "bcrypt";
 
 export async function encryptPassword(password: string) {
-  return await hash(password, 3)
+  return hash(password, 3)
     .then((hashedPassword) => {
       return hashedPassword;
     })
@@ -12,5 +12,5 @@ export async function encryptPassword(password: string) {
 }
 
 export async function comparePassword(plainPass, hashword) {
-  return await compare(plainPass, hashword).then((matched) => matched);
+  return compare(plainPass, hashword).then((matched) => matched);
 }

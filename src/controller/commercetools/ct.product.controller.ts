@@ -12,6 +12,6 @@ export class CTProductController {
   async getProducts(
     @Query() dto: GetProductsFilterDTO,
   ): Promise<IResponse<QueryData<Product>>> {
-    return await this.ctProductService.getProducts(dto);
+    return this.ctProductService.getProducts(dto);
   }
 }

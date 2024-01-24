@@ -16,11 +16,11 @@ export class UserController {
   async getUsers(
     @Query() filter: GetUsersFilterDTO,
   ): Promise<IResponse<User | User[]>> {
-    return await this.userService.getUsers(filter);
+    return this.userService.getUsers(filter);
   }
 
   @Get("/me")
   async getMe(): Promise<IResponse<User>> {
-    return await this.userService.getMe();
+    return this.userService.getMe();
   }
 }

@@ -30,7 +30,7 @@ export class CTOrderService extends CTService {
       ? generateOrderWhereString({ orderNumberParam: dto.orderNumber })
       : undefined;
 
-    return await this.CTOrderSDK.findOrders({
+    return this.CTOrderSDK.findOrders({
       where,
       limit: this.getLimit(dto?.limit),
       offset: this.getOffset(dto?.offset),
@@ -57,7 +57,7 @@ export class CTOrderService extends CTService {
   ): Promise<IResponse<QueryData<Order>>> {
     const where = `customerId="${this.customerId}"`;
 
-    return await this.CTOrderSDK.findMyOrders({
+    return this.CTOrderSDK.findMyOrders({
       where,
       limit: this.getLimit(),
       offset: this.getOffset(),
@@ -80,7 +80,7 @@ export class CTOrderService extends CTService {
   }
 
   async getOrderWithId(orderId: string): Promise<IResponse<Order>> {
-    return await this.CTOrderSDK.findOrderById(orderId)
+    return this.CTOrderSDK.findOrderById(orderId)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )

@@ -28,7 +28,7 @@ export class CTProductService extends CTService {
       ? generateProductWhereIdString(dto.productIds)
       : undefined;
 
-    return await this.CTProductSDK.findProducts({
+    return this.CTProductSDK.findProducts({
       where,
       limit: this.getLimit(dto?.limit),
       offset: this.getOffset(dto?.offset),
@@ -51,7 +51,7 @@ export class CTProductService extends CTService {
   }
 
   async getProductWithId(productId: string): Promise<IResponse<Product>> {
-    return await this.CTProductSDK.findProductById(productId)
+    return this.CTProductSDK.findProductById(productId)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )

@@ -36,7 +36,7 @@ export class AuthService {
       );
 
       if (user) {
-        return await this.authenticateUserByPassword(email, password);
+        return this.authenticateUserByPassword(email, password);
       } else {
         return ResponseBody()
           .status(HttpStatus.BAD_REQUEST)
@@ -107,7 +107,7 @@ export class AuthService {
         .build();
     }
 
-    return await this.userRepository.saveUser(dto, encryptedPassword);
+    return this.userRepository.saveUser(dto, encryptedPassword);
   }
 
   private async createCommercetoolsCustomer(

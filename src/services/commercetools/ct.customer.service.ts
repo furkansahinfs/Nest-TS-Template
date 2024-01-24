@@ -43,7 +43,7 @@ export class CTCustomerService extends CTService {
       ? generateCustomerWhereString({ customerNumberParam: dto.customerNumber })
       : undefined;
 
-    return await this.CTCustomerSDK.findCustomers({
+    return this.CTCustomerSDK.findCustomers({
       where,
       limit: this.getLimit(dto?.limit),
       offset: this.getOffset(dto?.offset),
@@ -81,7 +81,7 @@ export class CTCustomerService extends CTService {
       password: dto.password,
     };
 
-    return await this.CTCustomerSDK.createCustomer(customerDraft)
+    return this.CTCustomerSDK.createCustomer(customerDraft)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.CREATED).data(body).build(),
       )
@@ -96,9 +96,9 @@ export class CTCustomerService extends CTService {
   async updateCustomer(dto: UpdateCustomerDTO): Promise<IResponse<Customer>> {
     switch (dto.actionType) {
       case CustomerActions.SET_SHIPPING_ADDRESS:
-        return await this.setAddress(dto.address, "SHIPPING", true);
+        return this.setAddress(dto.address, "SHIPPING", true);
       case CustomerActions.SET_BILLING_ADDRESS:
-        return await this.setAddress(dto.address, "BILLING", true);
+        return this.setAddress(dto.address, "BILLING", true);
       default:
         break;
     }
@@ -139,7 +139,7 @@ export class CTCustomerService extends CTService {
       return ResponseBody().status(HttpStatus.OK).data(updatedCustomer).build();
     }
 
-    return await this.overrideDefaultAddress(
+    return this.overrideDefaultAddress(
       updatedCustomer.addresses?.[0]?.id,
       type,
     );
@@ -159,7 +159,7 @@ export class CTCustomerService extends CTService {
           : "setDefaultBillingAddress",
     };
 
-    return await this.CTCustomerSDK.updateCustomer(this.customerId, [
+    return this.CTCustomerSDK.updateCustomer(this.customerId, [
       setDefaultAddressAction,
     ])
       .then(({ body }) =>

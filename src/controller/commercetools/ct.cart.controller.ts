@@ -17,21 +17,21 @@ export class CTCartController {
   async getCarts(
     @Query() dto: GetCartFilterDTO,
   ): Promise<IResponse<CartPagedQueryResponse>> {
-    return await this.ctCartService.getCarts({ cartId: dto.cartId });
+    return this.ctCartService.getCarts({ cartId: dto.cartId });
   }
 
   @Get("/me")
   async getMyActiveCart(): Promise<IResponse<Cart>> {
-    return await this.ctCartService.getCustomerActiveCart();
+    return this.ctCartService.getCustomerActiveCart();
   }
 
   @Post()
   async createCart(@Body() dto: CreateCartDTO): Promise<IResponse<Cart>> {
-    return await this.ctCartService.createCart(dto);
+    return this.ctCartService.createCart(dto);
   }
 
   @Post("/action")
   async updateCart(@Body() dto: UpdateCartDTO): Promise<IResponse<Cart>> {
-    return await this.ctCartService.updateCart(dto);
+    return this.ctCartService.updateCart(dto);
   }
 }

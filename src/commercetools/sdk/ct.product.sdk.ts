@@ -12,7 +12,7 @@ export class CTProductSDK implements ICTProductSDK {
     limit,
     offset,
   }): Promise<ClientResponse<ProductProjectionPagedQueryResponse>> {
-    return await CTApiRoot.productProjections()
+    return CTApiRoot.productProjections()
       .get({
         queryArgs: {
           limit: limit,
@@ -26,7 +26,7 @@ export class CTProductSDK implements ICTProductSDK {
   async findProductById(
     productId: string,
   ): Promise<ClientResponse<ProductProjection>> {
-    return await CTApiRoot.productProjections()
+    return CTApiRoot.productProjections()
       .withId({ ID: productId })
       .get()
       .execute();

@@ -17,18 +17,18 @@ export class CTOrderController {
   async getOrders(
     @Query() dto: GetOrdersFilterDTO,
   ): Promise<IResponse<QueryData<Order>>> {
-    return await this.ctOrderService.getOrders(dto);
+    return this.ctOrderService.getOrders(dto);
   }
 
   @Get("/me")
   async getMyOrders(
     @Query() dto: GetOrdersFilterDTO,
   ): Promise<IResponse<QueryData<Order>>> {
-    return await this.ctOrderService.getMyOrders(dto);
+    return this.ctOrderService.getMyOrders(dto);
   }
 
   @Post()
   async createOrder(@Body() dto: CreateOrderDTO): Promise<IResponse<Order>> {
-    return await this.ctOrderService.createOrder(dto);
+    return this.ctOrderService.createOrder(dto);
   }
 }

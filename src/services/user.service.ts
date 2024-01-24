@@ -20,7 +20,7 @@ export class UserService {
 
   async getUsers(dto: GetUsersFilterDTO): Promise<IResponse<User | User[]>> {
     if (dto?.userId || dto?.username) {
-      return await this.getUserWithFilter(dto);
+      return this.getUserWithFilter(dto);
     }
     const users = await this.userRepository.getUsers(dto);
     return ResponseBody().status(HttpStatus.OK).data(users).build();
@@ -60,14 +60,14 @@ export class UserService {
     const accessTokenStr = get(this.request, "headers.authorization");
     const accessToken = accessTokenStr?.replace("Bearer ", "");
     const userId: string = getJWTUserId(accessToken, "ACCESS_TOKEN_PUBLIC_KEY");
-    return await this.userRepository.findByUserId(userId, { password: true });
+    return this.userRepository.findByUserId(userId, { password: true });
   }
 
   async getUserWithId(userId: string): Promise<User> {
-    return await this.userRepository.findByUserId(userId);
+    return this.userRepository.findByUserId(userId);
   }
 
   async getUserWithUsername(username: string): Promise<User> {
-    return await this.userRepository.findByUsername(username);
+    return this.userRepository.findByUsername(username);
   }
 }
