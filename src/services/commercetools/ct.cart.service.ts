@@ -76,6 +76,11 @@ export class CTCartService extends CTService {
           ResponseBody().status(error?.statusCode).message({ error }).build(),
         );
     }
+
+    return ResponseBody()
+      .status(HttpStatus.NOT_FOUND)
+      .message({ error: this.i18n.t("cart.cart.customer_not_found") })
+      .build();
   }
 
   async updateCart(dto: UpdateCartDTO): Promise<IResponse<Cart>> {
@@ -142,21 +147,7 @@ export class CTCartService extends CTService {
       return ResponseBody().status(HttpStatus.OK).data(updatedCart).build();
     }
 
-    const cartDraft: CartDraft = {
-      currency: "USD",
-      customerId: this.customerId,
-      lineItems: [],
-    };
-    return this.CTCartSDK.createCart(cartDraft)
-      .then(async (createdCart) => {
-        const updatedCart: Cart = await this.setCartDefaults(
-          createdCart.body.id,
-        );
-        return ResponseBody().status(HttpStatus.OK).data(updatedCart).build();
-      })
-      .catch((error) =>
-        ResponseBody().status(error?.statusCode).message({ error }).build(),
-      );
+    return this.createCart({});
   }
 
   private async updateCartWithActions(

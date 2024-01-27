@@ -1,5 +1,6 @@
 {
     "cart": {
-        "cart_not_found": "Cart with given ID is not found."
+        "cart_not_found": "Cart with given ID is not found.",
+        "customer_not_found": "Authenticated customer is not found."
     }
 }
