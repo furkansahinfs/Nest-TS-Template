@@ -8,10 +8,10 @@ import {
   DiscountCode,
   DiscountCodePagedQueryResponse,
 } from "@commercetools/platform-sdk";
-import { ICTCartSDK } from "./ct.cart.sdk.interface";
-import { CTApiRoot } from "../CTApiRoot";
+import { CTCartSDK } from "./cart.sdk.interface";
+import { CTApiRoot } from "src/commercetools";
 
-export class CTCartSDK implements ICTCartSDK {
+export class CTCartSDKImpl implements CTCartSDK {
   async findCarts({ where, limit, offset }) {
     return CTApiRoot.carts()
       .get({

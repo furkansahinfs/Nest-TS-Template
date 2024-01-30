@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { AuthController, UserController } from "src/controller";
 import {
   AuthService,
-  CTCustomerService,
+  CustomerService,
   PrismaService,
   UserService,
 } from "src/services";
@@ -26,7 +26,7 @@ import { UserRepository } from "src/repository";
   controllers: [AuthController, UserController],
   providers: [
     AuthService,
-    CTCustomerService,
+    CustomerService,
     UserRepository,
     UserService,
     PrismaService,

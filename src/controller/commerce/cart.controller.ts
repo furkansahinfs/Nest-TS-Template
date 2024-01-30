@@ -3,13 +3,13 @@ import { Body, Controller, Post, UseGuards, Query, Get } from "@nestjs/common";
 import { CreateCartDTO, GetCartFilterDTO, UpdateCartDTO } from "src/dto";
 import { ROLES } from "src/enums";
 import { RolesGuard } from "src/middleware";
-import { CTCartService } from "src/services";
+import { CartService } from "src/services";
 import { IResponse } from "src/types";
 import { Roles } from "src/util";
 
 @Controller("carts")
-export class CTCartController {
-  constructor(private readonly ctCartService: CTCartService) {}
+export class CartController {
+  constructor(private readonly cartService: CartService) {}
 
   @Get()
   @Roles(ROLES.ADMIN, ROLES.CT_ADMIN)
@@ -17,21 +17,21 @@ export class CTCartController {
   async getCarts(
     @Query() dto: GetCartFilterDTO,
   ): Promise<IResponse<CartPagedQueryResponse>> {
-    return this.ctCartService.getCarts({ cartId: dto.cartId });
+    return this.cartService.getCarts({ cartId: dto.cartId });
   }
 
   @Get("/me")
   async getMyActiveCart(): Promise<IResponse<Cart>> {
-    return this.ctCartService.getCustomerActiveCart();
+    return this.cartService.getCustomerActiveCart();
   }
 
   @Post()
   async createCart(@Body() dto: CreateCartDTO): Promise<IResponse<Cart>> {
-    return this.ctCartService.createCart(dto);
+    return this.cartService.createCart(dto);
   }
 
   @Post("/action")
   async updateCart(@Body() dto: UpdateCartDTO): Promise<IResponse<Cart>> {
-    return this.ctCartService.updateCart(dto);
+    return this.cartService.updateCart(dto);
   }
 }

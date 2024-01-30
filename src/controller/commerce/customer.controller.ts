@@ -7,13 +7,13 @@ import {
 } from "src/dto";
 import { ROLES } from "src/enums";
 import { RolesGuard } from "src/middleware";
-import { CTCustomerService } from "src/services";
+import { CustomerService } from "src/services";
 import { IResponse, QueryData } from "src/types";
 import { Roles } from "src/util";
 
 @Controller("customers")
-export class CTCustomerController {
-  constructor(private readonly ctCustomerService: CTCustomerService) {}
+export class CustomerController {
+  constructor(private readonly customerService: CustomerService) {}
 
   @Get()
   @Roles(ROLES.ADMIN, ROLES.CT_ADMIN)
@@ -21,25 +21,25 @@ export class CTCustomerController {
   async getCustomers(
     @Query() dto: GetCustomersFilterDTO,
   ): Promise<IResponse<QueryData<Customer>>> {
-    return this.ctCustomerService.getCustomers(dto);
+    return this.customerService.getCustomers(dto);
   }
 
   @Get("/me")
   async getMe(): Promise<IResponse<Customer>> {
-    return this.ctCustomerService.getMe();
+    return this.customerService.getMe();
   }
 
   @Post("/new")
   async create(
     @Body() dto: CreateCustomerDTO,
   ): Promise<IResponse<CustomerSignInResult>> {
-    return this.ctCustomerService.createCustomer(dto);
+    return this.customerService.createCustomer(dto);
   }
 
   @Post("/action")
   async updateCart(
     @Body() dto: UpdateCustomerDTO,
   ): Promise<IResponse<Customer>> {
-    return this.ctCustomerService.updateCustomer(dto);
+    return this.customerService.updateCustomer(dto);
   }
 }

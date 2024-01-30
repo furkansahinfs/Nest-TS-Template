@@ -6,10 +6,10 @@ import {
   CustomerSignInResult,
   CustomerUpdateAction,
 } from "@commercetools/platform-sdk";
-import { CTApiRoot } from "../CTApiRoot";
-import { ICTCustomerSDK } from "./ct.customer.sdk.interface";
+import { CTCustomerSDK } from "./customer.sdk.interface";
+import { CTApiRoot } from "src/commercetools";
 
-export class CTCustomerSDK implements ICTCustomerSDK {
+export class CTCustomerSDKImpl implements CTCustomerSDK {
   async findCustomers({
     where,
     limit,

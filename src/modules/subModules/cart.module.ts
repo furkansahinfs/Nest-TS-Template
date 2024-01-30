@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { CTCartController } from "src/controller";
-import { CTCartService } from "src/services";
+import { CartController } from "src/controller";
+import { CartService } from "src/services";
 import * as path from "path";
 import { AcceptLanguageResolver, I18nModule } from "nestjs-i18n";
 import { ResponseStatusInterceptor } from "src/middleware";
@@ -17,9 +17,9 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
       resolvers: [AcceptLanguageResolver],
     }),
   ],
-  controllers: [CTCartController],
+  controllers: [CartController],
   providers: [
-    CTCartService,
+    CartService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseStatusInterceptor,

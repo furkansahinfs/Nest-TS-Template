@@ -7,13 +7,13 @@ import {
   CustomerUpdateAction,
 } from "@commercetools/platform-sdk";
 
-interface FindCustomersParam {
+type FindCustomersParam = {
   where?: string;
   limit?: number;
   offset?: number;
-}
+};
 
-export interface ICTCustomerSDK {
+export interface CTCustomerSDK {
   findCustomers({
     where,
     limit,

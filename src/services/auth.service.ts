@@ -15,14 +15,14 @@ import { conf } from "src/config";
 import { IResponse, SignInResults, Tokens, User } from "src/types";
 import { UserRepository } from "src/repository";
 import { getJWTUser } from "src/util/jwt.util";
-import { CTCustomerService } from "./commercetools";
+import { CustomerService } from "./commerce";
 
 @Injectable()
 export class AuthService {
   constructor(
     private userRepository: UserRepository,
     private readonly i18n: I18nService,
-    private ctCustomerService: CTCustomerService,
+    private customerService: CustomerService,
   ) {}
 
   async login(dto: LoginDTO): Promise<IResponse<SignInResults>> {
@@ -114,7 +114,7 @@ export class AuthService {
     dto: RegisterDTO,
     userId: string,
   ): Promise<void> {
-    const ctCustomer = await this.ctCustomerService.createCustomer({
+    const ctCustomer = await this.customerService.createCustomer({
       ...dto,
       customerNumber: userId,
     });

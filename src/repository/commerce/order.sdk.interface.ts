@@ -5,13 +5,13 @@ import {
   OrderPagedQueryResponse,
 } from "@commercetools/platform-sdk";
 
-interface FindOrdersParam {
+type FindOrdersParam = {
   where?: string;
   limit?: number;
   offset?: number;
-}
+};
 
-export interface ICTOrderSDK {
+export interface CTOrderSDK {
   findOrders({
     where,
     limit,

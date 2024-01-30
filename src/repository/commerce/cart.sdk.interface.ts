@@ -6,13 +6,13 @@ import {
   ClientResponse,
 } from "@commercetools/platform-sdk";
 
-interface FindCartsParam {
+type FindCartsParam = {
   where?: string;
   limit?: number;
   offset?: number;
-}
+};
 
-export interface ICTCartSDK {
+export interface CTCartSDK {
   findCarts({
     where,
     limit,

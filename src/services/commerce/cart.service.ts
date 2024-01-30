@@ -12,7 +12,7 @@ import {
   DiscountCode,
 } from "@commercetools/platform-sdk";
 import { CartActions } from "src/enums";
-import { CTService } from "./ct.service";
+import { CommerceService } from "./commerce.service";
 import { IResponse } from "src/types";
 import {
   generateAddDiscountCodeAction,
@@ -22,21 +22,21 @@ import {
   generateRemoveDiscountCodeAction,
   generateRemoveLineItemAction,
 } from "./utils";
-import { CTCartSDK, CTCustomerSDK } from "src/commercetools";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
+import { CTCartSDKImpl, CTCustomerSDKImpl } from "src/repository";
 
 @Injectable()
-export class CTCartService extends CTService {
-  CTCartSDK: CTCartSDK;
-  CTCustomerSDK: CTCustomerSDK;
+export class CartService extends CommerceService {
+  ctCartSDKImpl: CTCartSDKImpl;
+  ctCustomerSDKImpl: CTCustomerSDKImpl;
   constructor(
     @Inject(REQUEST) protected readonly request: Request,
     private readonly i18n: I18nService,
   ) {
     super(request);
-    this.CTCartSDK = new CTCartSDK();
-    this.CTCustomerSDK = new CTCustomerSDK();
+    this.ctCartSDKImpl = new CTCartSDKImpl();
+    this.ctCustomerSDKImpl = new CTCustomerSDKImpl();
   }
 
   async getCarts(params: {
@@ -47,11 +47,12 @@ export class CTCartService extends CTService {
       ? `id="${cartId}"`
       : `customerId="${this.customerId}"`;
 
-    return this.CTCartSDK.findCarts({
-      where: whereString,
-      limit: this.getLimit(),
-      offset: this.getOffset(),
-    })
+    return this.ctCartSDKImpl
+      .findCarts({
+        where: whereString,
+        limit: this.getLimit(),
+        offset: this.getOffset(),
+      })
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )
@@ -66,8 +67,10 @@ export class CTCartService extends CTService {
         currency: "USD",
         customerId: this.customerId,
         lineItems: dto.products,
+        deleteDaysAfterLastModification: 10,
       };
-      return this.CTCartSDK.createCart(cartDraft)
+      return this.ctCartSDKImpl
+        .createCart(cartDraft)
         .then(async ({ body }) => {
           const updatedCart: Cart = await this.setCartDefaults(body.id);
           return ResponseBody().status(HttpStatus.OK).data(updatedCart).build();
@@ -134,7 +137,7 @@ export class CTCartService extends CTService {
   async getCustomerActiveCart(): Promise<IResponse<Cart>> {
     const where = `customerId="${this.customerId}" and cartState = "Active"`;
     const cartQueryResponse: ClientResponse<CartPagedQueryResponse> =
-      await this.CTCartSDK.findCarts({
+      await this.ctCartSDKImpl.findCarts({
         where,
         limit: this.getLimit(),
         offset: this.getOffset(),
@@ -154,7 +157,8 @@ export class CTCartService extends CTService {
     lineItemsAction: CartUpdateAction[],
     cartId: string,
   ): Promise<IResponse<Cart>> {
-    return this.CTCartSDK.updateCart(cartId, lineItemsAction)
+    return this.ctCartSDKImpl
+      .updateCart(cartId, lineItemsAction)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )
@@ -164,13 +168,13 @@ export class CTCartService extends CTService {
   }
 
   private async setCartDefaults(cartId: string): Promise<Cart> {
-    const customer: Customer = await this.CTCustomerSDK.findCustomerById(
+    const customer: Customer = await this.ctCustomerSDKImpl.findCustomerById(
       this.customerId,
     );
 
     const where = cartId ? `id="${cartId}"` : `customerId="${this.customerId}"`;
     const cartQueryResponse: ClientResponse<CartPagedQueryResponse> =
-      await this.CTCartSDK.findCarts({
+      await this.ctCartSDKImpl.findCarts({
         where,
         limit: 1,
         offset: 0,
@@ -214,6 +218,6 @@ export class CTCartService extends CTService {
   }
 
   private async checkDiscountCode(discountCode: string): Promise<DiscountCode> {
-    return this.CTCartSDK.getDiscount(discountCode);
+    return this.ctCartSDKImpl.getDiscount(discountCode);
   }
 }

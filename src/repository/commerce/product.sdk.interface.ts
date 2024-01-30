@@ -4,13 +4,13 @@ import {
   ProductProjectionPagedQueryResponse,
 } from "@commercetools/platform-sdk";
 
-interface FindProductsParam {
+type FindProductsParam = {
   where?: string;
   limit?: number;
   offset?: number;
-}
+};
 
-export interface ICTProductSDK {
+export interface CTProductSDK {
   findProducts({
     where,
     limit,

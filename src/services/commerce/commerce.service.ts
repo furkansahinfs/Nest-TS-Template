@@ -3,7 +3,7 @@ import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 
 @Injectable({ scope: Scope.REQUEST })
-export class CTService {
+export class CommerceService {
   protected customerId: string = this.request["user"]?.["ct_customer_id"];
 
   constructor(@Inject(REQUEST) protected readonly request: Request) {}

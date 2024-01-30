@@ -1,12 +1,12 @@
-import { CTApiRoot } from "../CTApiRoot";
 import {
   ClientResponse,
   ProductProjection,
   ProductProjectionPagedQueryResponse,
 } from "@commercetools/platform-sdk";
-import { ICTProductSDK } from "./ct.product.sdk.interface";
+import { CTProductSDK } from "./product.sdk.interface";
+import { CTApiRoot } from "src/commercetools";
 
-export class CTProductSDK implements ICTProductSDK {
+export class CTProductSDKImpl implements CTProductSDK {
   async findProducts({
     where,
     limit,

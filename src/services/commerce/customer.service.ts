@@ -15,23 +15,23 @@ import {
   CustomerSetDefaultShippingAddressAction,
   CustomerSignInResult,
 } from "@commercetools/platform-sdk";
-import { CTService } from "./ct.service";
+import { CommerceService } from "./commerce.service";
 import { CustomerActions } from "src/enums/customerAction.enum";
-import { CTCustomerSDK } from "src/commercetools";
 import { IResponse, QueryData } from "src/types";
 import { generateCustomerWhereString } from "./utils";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
+import { CTCustomerSDKImpl } from "src/repository";
 
 @Injectable()
-export class CTCustomerService extends CTService {
-  CTCustomerSDK: CTCustomerSDK;
+export class CustomerService extends CommerceService {
+  ctCustomerSDKImpl: CTCustomerSDKImpl;
   constructor(
     @Inject(REQUEST) protected readonly request: Request,
     private readonly i18n: I18nService,
   ) {
     super(request);
-    this.CTCustomerSDK = new CTCustomerSDK();
+    this.ctCustomerSDKImpl = new CTCustomerSDKImpl();
   }
 
   async getCustomers(
@@ -43,11 +43,12 @@ export class CTCustomerService extends CTService {
       ? generateCustomerWhereString({ customerNumberParam: dto.customerNumber })
       : undefined;
 
-    return this.CTCustomerSDK.findCustomers({
-      where,
-      limit: this.getLimit(dto?.limit),
-      offset: this.getOffset(dto?.offset),
-    })
+    return this.ctCustomerSDKImpl
+      .findCustomers({
+        where,
+        limit: this.getLimit(dto?.limit),
+        offset: this.getOffset(dto?.offset),
+      })
       .then(({ body }) =>
         ResponseBody()
           .status(HttpStatus.OK)
@@ -60,7 +61,9 @@ export class CTCustomerService extends CTService {
   }
 
   async getMe(): Promise<IResponse<Customer>> {
-    const customer = await this.CTCustomerSDK.findCustomerById(this.customerId);
+    const customer = await this.ctCustomerSDKImpl.findCustomerById(
+      this.customerId,
+    );
     if (customer) {
       return ResponseBody().status(HttpStatus.OK).data(customer).build();
     }
@@ -81,7 +84,8 @@ export class CTCustomerService extends CTService {
       password: dto.password,
     };
 
-    return this.CTCustomerSDK.createCustomer(customerDraft)
+    return this.ctCustomerSDKImpl
+      .createCustomer(customerDraft)
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.CREATED).data(body).build(),
       )
@@ -114,17 +118,15 @@ export class CTCustomerService extends CTService {
       action: "addAddress",
     };
 
-    const updatedCustomerResponse: Customer =
-      await this.CTCustomerSDK.updateCustomer(this.customerId, [
-        addAdressAction,
-      ])
-        .then(({ body }) => body)
-        .catch((error) =>
-          ResponseBody()
-            .status(HttpStatus.BAD_REQUEST)
-            .message({ error: error?.body?.message })
-            .build(),
-        );
+    const updatedCustomerResponse: Customer = await this.ctCustomerSDKImpl
+      .updateCustomer(this.customerId, [addAdressAction])
+      .then(({ body }) => body)
+      .catch((error) =>
+        ResponseBody()
+          .status(HttpStatus.BAD_REQUEST)
+          .message({ error: error?.body?.message })
+          .build(),
+      );
 
     if (!updatedCustomerResponse?.id) {
       return ResponseBody()
@@ -159,9 +161,8 @@ export class CTCustomerService extends CTService {
           : "setDefaultBillingAddress",
     };
 
-    return this.CTCustomerSDK.updateCustomer(this.customerId, [
-      setDefaultAddressAction,
-    ])
+    return this.ctCustomerSDKImpl
+      .updateCustomer(this.customerId, [setDefaultAddressAction])
       .then(({ body }) =>
         ResponseBody().status(HttpStatus.OK).data(body).build(),
       )

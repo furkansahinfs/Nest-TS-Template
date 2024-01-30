@@ -1,17 +1,17 @@
 import { Product } from "@commercetools/platform-sdk";
 import { Controller, Get, Query } from "@nestjs/common";
 import { GetProductsFilterDTO } from "src/dto";
-import { CTProductService } from "src/services";
+import { ProductService } from "src/services";
 import { IResponse, QueryData } from "src/types";
 
 @Controller("products")
-export class CTProductController {
-  constructor(private readonly ctProductService: CTProductService) {}
+export class ProductController {
+  constructor(private readonly productService: ProductService) {}
 
   @Get()
   async getProducts(
     @Query() dto: GetProductsFilterDTO,
   ): Promise<IResponse<QueryData<Product>>> {
-    return this.ctProductService.getProducts(dto);
+    return this.productService.getProducts(dto);
   }
 }
